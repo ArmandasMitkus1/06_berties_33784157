@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Books - <%= shopName %></title>
+  <link rel="stylesheet" href="/main.css">
+</head>
+<body>
+  <h1>📚 Books at <%= shopName %></h1>
+
+  <% if (books && books.length > 0) { %>
+    <ul>
+      <% books.forEach(book => { %>
+        <li>
+          <a href="/books/<%= book.id %>"><%= book.title %></a>
+          by <%= book.author %> (£<%= book.price.toFixed(2) %>)
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>No books found in the database.</p>
+  <% } %>
+
+  <p><a href="/">⬅ Back to Home</a></p>
+</body>
+</html>
