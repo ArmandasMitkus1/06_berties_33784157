@@ -1,32 +1,75 @@
-// Import the modules we need
-var express = require ('express')
-var ejs = require('ejs')
-var bodyParser= require ('body-parser')
+// ---------------------------------------------
+// IMPORT MODULES
+// ---------------------------------------------
+const express = require('express');
+const ejs = require('ejs');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+require('dotenv').config();
 
-// Create the express application object
-const app = express()
-const port = 8000
-app.use(bodyParser.urlencoded({ extended: true }))
+// ---------------------------------------------
+// CREATE EXPRESS APP
+// ---------------------------------------------
+const app = express();
+const port = 8000;
 
-// Set up css
+// ---------------------------------------------
+// LOG STARTUP
+// ---------------------------------------------
+console.log('✅ Starting Bertie\'s Books server...');
+console.log('🔍 Checking database connection...');
+
+// ---------------------------------------------
+// SETUP MYSQL CONNECTION POOL
+// ---------------------------------------------
+const db = mysql.createPool({
+  host: process.env.BB_HOST || 'localhost',
+  user: process.env.BB_USER,
+  password: process.env.BB_PASSWORD,
+  database: process.env.BB_DATABASE
+});
+
+// Test DB connection immediately
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('❌ Database connection failed:');
+    console.error(err);
+    process.exit(1); // Stop if we can’t connect
+  } else {
+    console.log('✅ Connected to MySQL successfully.');
+    connection.release();
+  }
+});
+
+// Make the db global for route access
+global.db = db;
+
+// ---------------------------------------------
+// MIDDLEWARE
+// ---------------------------------------------
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-// Set the directory where Express will pick up HTML files
-// __dirname will get the current directory
+// ---------------------------------------------
+// VIEW ENGINE
+// ---------------------------------------------
 app.set('views', __dirname + '/views');
-
-// Tell Express that we want to use EJS as the templating engine
 app.set('view engine', 'ejs');
-
-// Tells Express how we should process html files
-// We want to use EJS's rendering engine
 app.engine('html', ejs.renderFile);
 
-// Define our data
-var shopData = {shopName: "Bertie's Books"}
+// ---------------------------------------------
+// TEMPLATE DATA
+// ---------------------------------------------
+const shopData = { shopName: "Bertie's Books" };
 
-// Requires the main.js file inside the routes folder passing in the Express app and data as arguments.  All the routes will go in this file
-require("./routes/main")(app, shopData);
+// ---------------------------------------------
+// ROUTES
+// ---------------------------------------------
+require('./routes/main')(app, shopData);
 
-// Start the web app listening
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+// ---------------------------------------------
+// START SERVER
+// ---------------------------------------------
+app.listen(port, () => {
+  console.log(`🚀 Example app listening on http://localhost:${port}/`);
+});

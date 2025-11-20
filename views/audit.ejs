@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Audit Log – <%= shopName %></title>
+    <link rel="stylesheet" type="text/css" href="/main.css" />
+  </head>
+  <body>
+    <h1>Audit Log – <%= shopName %></h1>
+    <p><a href="/">Home</a> | <a href="/users/list">User List</a> | <a href="/register">Register</a></p>
+
+    <% if (entries.length === 0) { %>
+      <p>No audit entries yet.</p>
+    <% } else { %>
+      <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Success</th>
+          <th>IP Address</th>
+          <th>User Agent</th>
+          <th>Timestamp</th>
+        </tr>
+        <% entries.forEach(entry => { %>
+          <tr>
+            <td><%= entry.id %></td>
+            <td><%= entry.username %></td>
+            <td><%= entry.success ? "✅" : "❌" %></td>
+            <td><%= entry.ip_address %></td>
+            <td><%= entry.user_agent %></td>
+            <td><%= entry.ts.toLocaleString ? entry.ts.toLocaleString() : entry.ts %></td>
+          </tr>
+        <% }) %>
+      </table>
+    <% } %>
+  </body>
+</html>
