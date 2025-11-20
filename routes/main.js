@@ -93,4 +93,49 @@ module.exports = function (app, shopData) {
       res.render('book_detail', { ...shopData, book: results[0] });
     });
   });
+
+  // -------------------------
+  // LOGIN FORM
+  // -------------------------
+  app.get('/login', (req, res) => {
+    res.render('login', shopData);
+  });
+
+  // -------------------------
+  // HANDLE LOGIN
+  // -------------------------
+  app.post('/loggedin', (req, res) => {
+    const { username, password } = req.body;
+
+    const sql = 'SELECT * FROM users WHERE username = ?';
+    shopData.db.query(sql, [username], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.send('Database error.');
+      }
+
+      if (results.length === 0) {
+        return res.send('❌ Login failed: invalid username or password.');
+      }
+
+      const user = results[0];
+
+      bcrypt.compare(password, user.hashedPassword, (err2, match) => {
+        if (err2) {
+          console.error(err2);
+          return res.send('Error verifying password.');
+        }
+
+        if (match) {
+          res.send(`
+            <h1>Login Successful ✅</h1>
+            <p>Welcome back, ${user.first_name} ${user.last_name}!</p>
+            <p><a href="/">⬅ Back to Home</a></p>
+          `);
+        } else {
+          res.send('❌ Login failed: invalid username or password.');
+        }
+      });
+    });
+  });
 };
