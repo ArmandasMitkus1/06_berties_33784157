@@ -1,75 +1,85 @@
-// ---------------------------------------------
-// IMPORT MODULES
-// ---------------------------------------------
-const express = require('express');
-const ejs = require('ejs');
-const bodyParser = require('body-parser');
-const mysql = require('mysql2');
-require('dotenv').config();
+// routes/main.js
 
-// ---------------------------------------------
-// CREATE EXPRESS APP
-// ---------------------------------------------
-const app = express();
-const port = 8000;
+module.exports = function (app, shopData) {
+  const bcrypt = require('bcrypt');
+  const saltRounds = 10;
 
-// ---------------------------------------------
-// LOG STARTUP
-// ---------------------------------------------
-console.log('✅ Starting Bertie\'s Books server...');
-console.log('🔍 Checking database connection...');
+  // -------------------------
+  // HOME PAGE
+  // -------------------------
+  app.get('/', (req, res) => {
+    res.render('index', shopData);
+  });
 
-// ---------------------------------------------
-// SETUP MYSQL CONNECTION POOL
-// ---------------------------------------------
-const db = mysql.createPool({
-  host: process.env.BB_HOST || 'localhost',
-  user: process.env.BB_USER,
-  password: process.env.BB_PASSWORD,
-  database: process.env.BB_DATABASE
-});
+  // ABOUT PAGE
+  app.get('/about', (req, res) => {
+    res.render('about', shopData);
+  });
 
-// Test DB connection immediately
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('❌ Database connection failed:');
-    console.error(err);
-    process.exit(1);
-  } else {
-    console.log('✅ Connected to MySQL successfully.');
-    connection.release();
-  }
-});
+  // SEARCH PAGE
+  app.get('/search', (req, res) => {
+    res.render('search', shopData);
+  });
 
-// ---------------------------------------------
-// MIDDLEWARE
-// ---------------------------------------------
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
+  // -------------------------
+  // REGISTER FORM
+  // -------------------------
+  app.get('/register', (req, res) => {
+    res.render('register', shopData);
+  });
 
-// ---------------------------------------------
-// VIEW ENGINE
-// ---------------------------------------------
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
-app.engine('html', ejs.renderFile);
+  // -------------------------
+  // HANDLE REGISTRATION
+  // -------------------------
+  app.post('/registered', (req, res) => {
+    const { first, last, email } = req.body;
 
-// ---------------------------------------------
-// TEMPLATE DATA
-// ---------------------------------------------
-const shopData = {
-  shopName: "Bertie's Books",
-  db: db  // ✅ Give routes access to database
+    const sql = `
+      INSERT INTO users (first_name, last_name, email)
+      VALUES (?, ?, ?)
+    `;
+
+    shopData.db.query(sql, [first, last, email], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.send('Error saving registration: ' + err.message);
+      }
+
+      res.send(`
+        <h1>Registration Successful</h1>
+        <p>Welcome, ${first} ${last}!</p>
+        <p>Your email ${email} has been registered with Bertie’s Books.</p>
+        <p><a href="/">⬅ Back to Home</a></p>
+      `);
+    });
+  });
+
+  // -------------------------
+  // BOOK LIST PAGE
+  // -------------------------
+  app.get('/books', (req, res) => {
+    const sql = 'SELECT * FROM books';
+    shopData.db.query(sql, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching books');
+      }
+      res.render('books_list', { ...shopData, books: results });
+    });
+  });
+
+  // -------------------------
+  // INDIVIDUAL BOOK PAGE
+  // -------------------------
+  app.get('/books/:id', (req, res) => {
+    const bookId = req.params.id;
+    const sql = 'SELECT * FROM books WHERE id = ?';
+    shopData.db.query(sql, [bookId], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching book');
+      }
+      res.render('book_detail', { ...shopData, book: results[0] });
+    });
+  });
 };
-
-// ---------------------------------------------
-// ROUTES
-// ---------------------------------------------
-require('./routes/main')(app, shopData);
-
-// ---------------------------------------------
-// START SERVER
-// ---------------------------------------------
-app.listen(port, () => {
-  console.log(`🚀 Example app listening on http://localhost:${port}/`);
-});
