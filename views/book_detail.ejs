@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= shopName %> — <%= book.name %></title>
+  <link rel="stylesheet" href="/main.css">
+</head>
+<body>
+  <h1><%= book.name %></h1>
+
+  <table border="1" cellpadding="6">
+    <tr><th>ID</th><td><%= book.id %></td></tr>
+    <tr><th>Title</th><td><%= book.name %></td></tr>
+    <tr><th>Price (£)</th><td><%= book.price %></td></tr>
+  </table>
+
+  <p><a href="/books">⬅ Back to all books</a></p>
+  <p><a href="/">🏠 Back to Home</a></p>
+</body>
+</html>
