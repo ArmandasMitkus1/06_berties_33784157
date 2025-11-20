@@ -34,23 +34,34 @@ module.exports = function (app, shopData) {
   app.post('/registered', (req, res) => {
     const { first, last, email } = req.body;
 
-    const sql = `
-      INSERT INTO users (first_name, last_name, email)
-      VALUES (?, ?, ?)
-    `;
+    // Generate simple username and password for now
+    const username = email.split('@')[0];
+    const plainPassword = 'password123';
 
-    shopData.db.query(sql, [first, last, email], (err, result) => {
+    bcrypt.hash(plainPassword, saltRounds, (err, hashedPassword) => {
       if (err) {
         console.error(err);
-        return res.send('Error saving registration: ' + err.message);
+        return res.send('Error hashing password.');
       }
 
-      res.send(`
-        <h1>Registration Successful</h1>
-        <p>Welcome, ${first} ${last}!</p>
-        <p>Your email ${email} has been registered with Bertie’s Books.</p>
-        <p><a href="/">⬅ Back to Home</a></p>
-      `);
+      const sql = `
+        INSERT INTO users (username, first_name, last_name, email, hashedPassword)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      shopData.db.query(sql, [username, first, last, email, hashedPassword], (err2) => {
+        if (err2) {
+          console.error(err2);
+          return res.send('Error saving registration: ' + err2.message);
+        }
+
+        res.send(`
+          <h1>Registration Successful ✅</h1>
+          <p>Hello ${first} ${last}, you are now registered.</p>
+          <p>Your username is <strong>${username}</strong> and a default password (<i>password123</i>) was securely hashed.</p>
+          <p><a href="/">⬅ Back to Home</a></p>
+        `);
+      });
     });
   });
 
