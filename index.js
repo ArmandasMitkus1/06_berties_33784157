@@ -24,9 +24,9 @@ console.log('🔍 Checking database connection...');
 // ---------------------------------------------
 const db = mysql.createPool({
   host: process.env.BB_HOST || 'localhost',
-  user: process.env.BB_USER,
-  password: process.env.BB_PASSWORD,
-  database: process.env.BB_DATABASE
+  user: process.env.BB_USER || 'bertie',
+  password: process.env.BB_PASSWORD || 'password123',
+  database: process.env.BB_DATABASE || 'berties_books'
 });
 
 // Test DB connection immediately
@@ -41,8 +41,13 @@ db.getConnection((err, connection) => {
   }
 });
 
-// Make the db global for route access
-global.db = db;
+// ---------------------------------------------
+// TEMPLATE DATA (now includes DB)
+// ---------------------------------------------
+const shopData = {
+  shopName: "Bertie's Books",
+  db: db
+};
 
 // ---------------------------------------------
 // MIDDLEWARE
@@ -56,11 +61,6 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('html', ejs.renderFile);
-
-// ---------------------------------------------
-// TEMPLATE DATA
-// ---------------------------------------------
-const shopData = { shopName: "Bertie's Books" };
 
 // ---------------------------------------------
 // ROUTES
