@@ -1,42 +1,24 @@
-Lab 6 – Bertie’s Books (Distributed Web Applications)
+# Bertie’s Books – Lab 7
 
-Student: Armandas Mitkus — ID: 33784157
+Simple Node.js + MySQL web app for the Goldsmiths web dev labs. Built on top of the Lab 6 bookshop and extended with user registration and database-backed pages.
 
-Overview
+## Features
 
-Lab 6 involved creating and deploying a small web application called Bertie’s Books using Node.js, Express, MySQL, and EJS.
-The aim was to build a functional web app that connects to a MySQL database, renders pages with EJS, and is deployed on the Goldsmiths DOC server.
+- Home, About, Search pages (`/`, `/about`, `/search`)
+- Book list from MySQL (`/books`)
+- Individual book detail (`/books/:id`)
+- Registration form (`/register` → `/registered`)
+- Users stored in `berties_books.users` (with hashed default password)
 
-What Was Completed
+## Tech Stack
 
-Set up a Node.js + Express project
+- Node.js, Express, EJS
+- MySQL (database: `berties_books`)
+- Deployed on Goldsmiths VM (`doc428`)
 
-Created a MySQL database using create_db.sql
+## Run Locally
 
-Inserted sample data using insert_test_data.sql
-
-Implemented routes for:
-
-/books/list – list all books
-
-/addbook – add a new book
-
-/bargainbooks – show discounted books
-
-Built EJS templates for all required pages
-
-Deployed the app on the DOC server using forever
-
-Confirmed it is running on port 8000
-
-Deployment
-
-The server process is running with forever so the marker can access it.
-
-Repository
-
-https://github.com/ArmandasMitkus1/06_berties_33784157
-
-Links File
-
-links.txt has been added as required by the lab instructions.
+```bash
+npm install
+npm start
+# app on http://localhost:8000
