@@ -2,10 +2,6 @@
 
 module.exports = function (app, shopData) {
 
-  // -------------------------
-  // IMPORT MODULES (Lab 8b, Task 1)
-  // -------------------------
-  const { check, validationResult } = require('express-validator'); 
   const bcrypt = require('bcrypt');
   const saltRounds = 10;
   
@@ -28,12 +24,12 @@ module.exports = function (app, shopData) {
     res.render('index', shopData);
   });
 
-  // (Optional) ABOUT PAGE
+  // ABOUT PAGE
   app.get('/about', (req, res) => {
     res.render('about', shopData);
   });
 
-  // (Optional) SEARCH PAGE
+  // SEARCH PAGE
   app.get('/search', (req, res) => {
     res.render('search', shopData);
   });
@@ -42,43 +38,19 @@ module.exports = function (app, shopData) {
   // REGISTER FORM
   // -------------------------
   app.get('/register', (req, res) => {
-    // Pass errors object if needed, but for simplicity, we'll just redirect to the form
-    res.render('register', shopData); 
+    res.render('register', shopData); // ✅ now passes shopName
   });
 
   // -------------------------
   // HANDLE REGISTRATION (Lab 8b: Validation and Sanitisation)
   // -------------------------
-  app.post('/registered', 
-    // Validation Middleware (Lab 8b, Tasks 2 & 3)
-    [ 
-        check('email').isEmail(),
-        check('username').isLength({ min: 5, max: 20}).trim().escape(), // Added trim/escape for basic sanitisation before DB (Good Practice)
-        check('password').isLength({ min: 8 }) // REQUIRED ADDITION: Password minimum length
-    ], 
-    (req, res) => {
+  app.post('/registered', (req, res) => {
+    const { first, last, email, username, password } = req.body;
 
-    // 1. Check for errors from validation
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // If validation fails, return to registration page
-      console.log("Validation Failed:", errors.array());
-      // In a real app, you'd pass errors back to the template
-      return res.render('register', shopData); 
-    }
-    
-    // 2. Apply Sanitisation (Lab 8b, Task 7) - AFTER validation passes
-    // NOTE: req.sanitize is available because you added app.use(expressSanitizer()) in index.js
-    const first = req.sanitize(req.body.first);
-    const last = req.sanitize(req.body.last);
-    const email = req.sanitize(req.body.email);
-    const username = req.sanitize(req.body.username);
-    const password = req.body.password; // Do not sanitize password (it will be hashed)
-
-    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+    bcrypt.hash(plainPassword, saltRounds, (err, hashedPassword) => {
       if (err) {
         console.error(err);
-        return res.send('Error hashing password');
+        return res.send('Error hashing password.');
       }
 
       const sql = `
@@ -86,21 +58,48 @@ module.exports = function (app, shopData) {
         VALUES (?, ?, ?, ?, ?)
       `;
 
-      // Use the sanitized variables (first, last, email, username) for DB insertion
       db.query(sql, [username, first, last, email, hashedPassword], (err2) => {
         if (err2) {
           console.error(err2);
-          // In a real app, check for unique key constraint error (e.g., username/email already exists)
           return res.send('Error saving user: ' + err2);
         }
 
         res.send(`
-          <h1>Registration Successful</h1>
+          <h1>Registration Successful ✅</h1>
           <p>Hello ${first} ${last}, you are now registered.</p>
-          <p>Your username is <strong>${username}</strong>. Your password has been securely hashed.</p>
-          <p><a href="/login">Go to login</a></p>
+          <p>Your username is <strong>${username}</strong> and a default password (<i>password123</i>) was securely hashed.</p>
+          <p><a href="/">⬅ Back to Home</a></p>
         `);
       });
+    });
+  });
+
+  // -------------------------
+  // BOOK LIST PAGE
+  // -------------------------
+  app.get('/books', (req, res) => {
+    const sql = 'SELECT * FROM books';
+    shopData.db.query(sql, (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching books');
+      }
+      res.render('books_list', { ...shopData, books: results });
+    });
+  });
+
+  // -------------------------
+  // INDIVIDUAL BOOK PAGE
+  // -------------------------
+  app.get('/books/:id', (req, res) => {
+    const bookId = req.params.id;
+    const sql = 'SELECT * FROM books WHERE id = ?';
+    shopData.db.query(sql, [bookId], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching book');
+      }
+      res.render('book_detail', { ...shopData, book: results[0] });
     });
   });
 
@@ -117,15 +116,15 @@ module.exports = function (app, shopData) {
   app.post('/loggedin', (req, res) => {
     const { username, password } = req.body;
 
-    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
+    const sql = 'SELECT * FROM users WHERE username = ?';
+    shopData.db.query(sql, [username], (err, results) => {
       if (err) {
         console.error(err);
-        return res.send('Database error');
+        return res.send('Database error.');
       }
 
       if (results.length === 0) {
-        recordAudit(username, false, req);
-        return res.send('Login failed: invalid username or password.');
+        return res.send('❌ Login failed: invalid username or password.');
       }
 
       const user = results[0];
@@ -133,28 +132,23 @@ module.exports = function (app, shopData) {
       bcrypt.compare(password, user.hashedPassword, (err2, match) => {
         if (err2) {
           console.error(err2);
-          return res.send('Error comparing passwords');
+          return res.send('Error verifying password.');
         }
 
         if (match) {
           recordAudit(username, true, req);
-          
-          // ADDITION: Save user session here, when login is successful (Lab 8a, Task 3)
-          req.session.userId = user.username; 
-          
           res.send(`<h1>Login Successful</h1><p>Welcome, ${user.first_name}!</p>`);
         } else {
-          recordAudit(username, false, req);
-          res.send('Login failed: invalid username or password.');
+          res.send('❌ Login failed: invalid username or password.');
         }
       });
     });
   });
 
   // -------------------------
-  // USERS LIST (PROTECTED) (Lab 8a, Task 3)
+  // USERS LIST (NO PASSWORDS)
   // -------------------------
-  app.get('/users/list', redirectLogin, (req, res) => { // ADDITION: Protected by redirectLogin
+  app.get('/users/list', (req, res) => {
     db.query(
       'SELECT username, first_name, last_name, email FROM users',
       (err, results) => {
@@ -165,18 +159,6 @@ module.exports = function (app, shopData) {
         res.render('users_list', { users: results, shopName: shopData.shopName });
       }
     );
-  });
-  
-  // -------------------------
-  // LOGOUT ROUTE (Lab 8a, Task 4)
-  // -------------------------
-  app.get('/logout', redirectLogin, (req,res) => {
-    req.session.destroy(err => { // Destroy the session
-        if (err) {
-            return res.redirect('./') 
-        }
-        res.send('you are now logged out. <a href='+'./'+'>Home</a>');
-    })
   });
 
   // -------------------------
@@ -190,4 +172,24 @@ module.exports = function (app, shopData) {
           console.error(err);
           return res.send('Error fetching audit log');
         }
-        res.render('audit', { entries: results
+        res.render('audit', { entries: results, shopName: shopData.shopName });
+      }
+    );
+  });
+
+  // -------------------------
+  // AUDIT HELPER FUNCTION
+  // -------------------------
+  function recordAudit(username, success, req) {
+    const ip = req.ip;
+    const ua = req.headers['user-agent'] || '';
+    const sql = `
+      INSERT INTO login_audit (username, success, ip_address, user_agent)
+      VALUES (?, ?, ?, ?)
+    `;
+    db.query(sql, [username, success ? 1 : 0, ip, ua], (err) => {
+      if (err) console.error('Error saving audit record:', err);
+    });
+  }
+
+}; // END module.exports
