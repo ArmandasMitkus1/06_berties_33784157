@@ -2,6 +2,10 @@
 
 module.exports = function (app, shopData) {
 
+  // -------------------------
+  // IMPORT MODULES 
+  // -------------------------
+  const { check, validationResult } = require('express-validator');
   const bcrypt = require('bcrypt');
   const saltRounds = 10;
   
@@ -11,9 +15,9 @@ module.exports = function (app, shopData) {
   const redirectLogin = (req, res, next) => {
     // Check if the user ID is in the session
     if (!req.session.userId) { 
-        res.redirect('/login') // Redirect to the login page if not logged in
+        res.redirect('/login') 
     } else {
-        next(); // Move to the next middleware function (the route handler)
+        next();
     }
   }
 
@@ -24,12 +28,12 @@ module.exports = function (app, shopData) {
     res.render('index', shopData);
   });
 
-  // ABOUT PAGE
+  // (Optional) ABOUT PAGE
   app.get('/about', (req, res) => {
     res.render('about', shopData);
   });
 
-  // SEARCH PAGE
+  // (Optional) SEARCH PAGE
   app.get('/search', (req, res) => {
     res.render('search', shopData);
   });
@@ -38,19 +42,40 @@ module.exports = function (app, shopData) {
   // REGISTER FORM
   // -------------------------
   app.get('/register', (req, res) => {
-    res.render('register', shopData); // ✅ now passes shopName
+    res.render('register', shopData); 
   });
 
   // -------------------------
   // HANDLE REGISTRATION (Lab 8b: Validation and Sanitisation)
   // -------------------------
-  app.post('/registered', (req, res) => {
-    const { first, last, email, username, password } = req.body;
+  app.post('/registered', 
+    // Validation Middleware (Lab 8b, Tasks 2 & 3)
+    [ 
+        check('email').isEmail(),
+        check('username').isLength({ min: 5, max: 20}).trim().escape(), 
+        check('password').isLength({ min: 8 }) 
+    ], 
+    (req, res) => {
 
-    bcrypt.hash(plainPassword, saltRounds, (err, hashedPassword) => {
+    // 1. Check for errors from validation
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log("Validation Failed:", errors.array());
+      return res.render('register', shopData); 
+    }
+    
+    // 2. Apply Sanitisation (Lab 8b, Task 7) - AFTER validation passes
+    // NOTE: req.sanitize is available because app.use(expressSanitizer()) is in index.js
+    const first = req.sanitize(req.body.first);
+    const last = req.sanitize(req.body.last);
+    const email = req.sanitize(req.body.email);
+    const username = req.sanitize(req.body.username);
+    const password = req.body.password; // Do not sanitize password
+
+    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
       if (err) {
         console.error(err);
-        return res.send('Error hashing password.');
+        return res.send('Error hashing password');
       }
 
       const sql = `
@@ -58,6 +83,7 @@ module.exports = function (app, shopData) {
         VALUES (?, ?, ?, ?, ?)
       `;
 
+      // Use the sanitized variables (first, last, email, username) for DB insertion
       db.query(sql, [username, first, last, email, hashedPassword], (err2) => {
         if (err2) {
           console.error(err2);
@@ -65,41 +91,12 @@ module.exports = function (app, shopData) {
         }
 
         res.send(`
-          <h1>Registration Successful ✅</h1>
+          <h1>Registration Successful</h1>
           <p>Hello ${first} ${last}, you are now registered.</p>
-          <p>Your username is <strong>${username}</strong> and a default password (<i>password123</i>) was securely hashed.</p>
-          <p><a href="/">⬅ Back to Home</a></p>
+          <p>Your username is <strong>${username}</strong>. Your password has been securely hashed.</p>
+          <p><a href="/login">Go to login</a></p>
         `);
       });
-    });
-  });
-
-  // -------------------------
-  // BOOK LIST PAGE
-  // -------------------------
-  app.get('/books', (req, res) => {
-    const sql = 'SELECT * FROM books';
-    shopData.db.query(sql, (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send('Error fetching books');
-      }
-      res.render('books_list', { ...shopData, books: results });
-    });
-  });
-
-  // -------------------------
-  // INDIVIDUAL BOOK PAGE
-  // -------------------------
-  app.get('/books/:id', (req, res) => {
-    const bookId = req.params.id;
-    const sql = 'SELECT * FROM books WHERE id = ?';
-    shopData.db.query(sql, [bookId], (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send('Error fetching book');
-      }
-      res.render('book_detail', { ...shopData, book: results[0] });
     });
   });
 
@@ -116,15 +113,15 @@ module.exports = function (app, shopData) {
   app.post('/loggedin', (req, res) => {
     const { username, password } = req.body;
 
-    const sql = 'SELECT * FROM users WHERE username = ?';
-    shopData.db.query(sql, [username], (err, results) => {
+    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
       if (err) {
         console.error(err);
-        return res.send('Database error.');
+        return res.send('Database error');
       }
 
       if (results.length === 0) {
-        return res.send('❌ Login failed: invalid username or password.');
+        recordAudit(username, false, req);
+        return res.send('Login failed: invalid username or password.');
       }
 
       const user = results[0];
@@ -132,23 +129,28 @@ module.exports = function (app, shopData) {
       bcrypt.compare(password, user.hashedPassword, (err2, match) => {
         if (err2) {
           console.error(err2);
-          return res.send('Error verifying password.');
+          return res.send('Error comparing passwords');
         }
 
         if (match) {
           recordAudit(username, true, req);
-          res.send(`<h1>Login Successful</h1><p>Welcome, ${user.first_name}!</p>`);
+          
+          // ADDITION: Save user session here, when login is successful
+          req.session.userId = user.username; 
+          
+          res.send(`<h1>Login Successful</h1><p>Welcome, ${user.first_name}! <a href="/users/list">View Users</a></p>`);
         } else {
-          res.send('❌ Login failed: invalid username or password.');
+          recordAudit(username, false, req);
+          res.send('Login failed: invalid username or password.');
         }
       });
     });
   });
 
   // -------------------------
-  // USERS LIST (NO PASSWORDS)
+  // USERS LIST (PROTECTED) (Lab 8a, Task 3)
   // -------------------------
-  app.get('/users/list', (req, res) => {
+  app.get('/users/list', redirectLogin, (req, res) => { 
     db.query(
       'SELECT username, first_name, last_name, email FROM users',
       (err, results) => {
@@ -160,11 +162,23 @@ module.exports = function (app, shopData) {
       }
     );
   });
+  
+  // -------------------------
+  // LOGOUT ROUTE (Lab 8a, Task 4)
+  // -------------------------
+  app.get('/logout', redirectLogin, (req,res) => {
+    req.session.destroy(err => { 
+        if (err) {
+            return res.redirect('./') 
+        }
+        res.send('you are now logged out. <a href='+'./'+'>Home</a>');
+    })
+  });
 
   // -------------------------
-  // AUDIT LOG VIEW
+  // AUDIT LOG VIEW (Protected for security/compliance)
   // -------------------------
-  app.get('/audit', (req, res) => {
+  app.get('/audit', redirectLogin, (req, res) => { // ADDITION: Protected by redirectLogin
     db.query(
       'SELECT * FROM login_audit ORDER BY ts DESC',
       (err, results) => {
@@ -178,16 +192,20 @@ module.exports = function (app, shopData) {
   });
 
   // -------------------------
-  // AUDIT HELPER FUNCTION
+  // AUDIT HELPER FUNCTION (Security Fix)
   // -------------------------
   function recordAudit(username, success, req) {
+    // FIX: Sanitize the username and user-agent before saving to prevent XSS in audit log
+    const sanitizedUsername = req.sanitize(username); 
+    const sanitizedUa = req.sanitize(req.headers['user-agent'] || ''); 
+    
     const ip = req.ip;
-    const ua = req.headers['user-agent'] || '';
     const sql = `
       INSERT INTO login_audit (username, success, ip_address, user_agent)
       VALUES (?, ?, ?, ?)
     `;
-    db.query(sql, [username, success ? 1 : 0, ip, ua], (err) => {
+    // Use sanitized variables for the query:
+    db.query(sql, [sanitizedUsername, success ? 1 : 0, ip, sanitizedUa], (err) => {
       if (err) console.error('Error saving audit record:', err);
     });
   }
