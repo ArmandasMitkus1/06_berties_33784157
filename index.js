@@ -5,8 +5,8 @@ const express = require('express');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
-const session = require('express-session'); // Session setup (Lab 8a)
-const expressSanitizer = require('express-sanitizer'); // <-- NEW: Import sanitisation module [cite: 119]
+const session = require('express-session'); 
+const expressSanitizer = require('express-sanitizer'); // Lab 8b: Sanitisation setup
 require('dotenv').config();
 
 // ---------------------------------------------
@@ -26,9 +26,9 @@ console.log('🔍 Checking database connection...');
 // ---------------------------------------------
 const db = mysql.createPool({
   host: process.env.BB_HOST || 'localhost',
-  user: process.env.BB_USER || 'bertie',
-  password: process.env.BB_PASSWORD || 'password123',
-  database: process.env.BB_DATABASE || 'berties_books'
+  user: process.env.BB_USER,
+  password: process.env.BB_PASSWORD,
+  database: process.env.BB_DATABASE
 });
 
 // Test DB connection immediately
@@ -36,27 +36,22 @@ db.getConnection((err, connection) => {
   if (err) {
     console.error('❌ Database connection failed:');
     console.error(err);
-    process.exit(1); // Stop if we can’t connect
+    process.exit(1); 
   } else {
     console.log('✅ Connected to MySQL successfully.');
     connection.release();
   }
 });
 
-// ---------------------------------------------
-// TEMPLATE DATA (now includes DB)
-// ---------------------------------------------
-const shopData = {
-  shopName: "Bertie's Books",
-  db: db
-};
+// Make the db global for route access
+global.db = db;
 
 // ---------------------------------------------
 // MIDDLEWARE
 // ---------------------------------------------
 // Session Middleware (Lab 8a)
 app.use(session({
-    secret: 'somerandomstuff',
+    secret: 'somerandomstuff', 
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -64,10 +59,8 @@ app.use(session({
     }
 }));
 
-// ** NEW: Sanitisation Middleware (Lab 8b, Task 6) **
-// Create an input sanitizer
-app.use(expressSanitizer()); // [cite: 122, 123]
-// ----------------------------------------------------
+// Sanitisation Middleware (Lab 8b, Task 6)
+app.use(expressSanitizer()); 
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
@@ -78,6 +71,11 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('html', ejs.renderFile);
+
+// ---------------------------------------------
+// TEMPLATE DATA
+// ---------------------------------------------
+const shopData = { shopName: "Bertie's Books" };
 
 // ---------------------------------------------
 // ROUTES

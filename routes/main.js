@@ -2,6 +2,10 @@
 
 module.exports = function (app, shopData) {
 
+  // -------------------------
+  // IMPORT MODULES 
+  // -------------------------
+  const { check, validationResult } = require('express-validator'); 
   const bcrypt = require('bcrypt');
   const saltRounds = 10;
   
@@ -9,13 +13,27 @@ module.exports = function (app, shopData) {
   // AUTHORISATION MIDDLEWARE (Lab 8a, Task 3)
   // -------------------------
   const redirectLogin = (req, res, next) => {
-    // Check if the user ID is in the session
     if (!req.session.userId) { 
-        res.redirect('/login') // Redirect to the login page if not logged in
+        res.redirect('/login') 
     } else {
-        next(); // Move to the next middleware function (the route handler)
+        next();
     }
   }
+
+  // -------------------------
+  // SECURITY HELPERS (XSS Fixes for Database Reads)
+  // -------------------------
+
+  // Helper to sanitize book database results (used by book list/detail/search)
+  const sanitizeBookData = (book) => {
+    if (!book) return null;
+    return {
+      id: book.id,
+      name: req.sanitize(book.name),
+      price: book.price
+      // Sanitize other string fields as necessary
+    };
+  };
 
   // -------------------------
   // HOME PAGE
@@ -24,12 +42,12 @@ module.exports = function (app, shopData) {
     res.render('index', shopData);
   });
 
-  // ABOUT PAGE
+  // (Optional) ABOUT PAGE
   app.get('/about', (req, res) => {
     res.render('about', shopData);
   });
 
-  // SEARCH PAGE
+  // (Optional) SEARCH PAGE
   app.get('/search', (req, res) => {
     res.render('search', shopData);
   });
@@ -38,19 +56,39 @@ module.exports = function (app, shopData) {
   // REGISTER FORM
   // -------------------------
   app.get('/register', (req, res) => {
-    res.render('register', shopData); // ✅ now passes shopName
+    res.render('register', shopData); 
   });
 
   // -------------------------
   // HANDLE REGISTRATION (Lab 8b: Validation and Sanitisation)
   // -------------------------
-  app.post('/registered', (req, res) => {
-    const { first, last, email, username, password } = req.body;
+  app.post('/registered', 
+    // Validation Middleware (Lab 8b, Tasks 2 & 3)
+    [ 
+        check('email').isEmail(),
+        check('username').isLength({ min: 5, max: 20}).trim().escape(), 
+        check('password').isLength({ min: 8 }) 
+    ], 
+    (req, res) => {
 
-    bcrypt.hash(plainPassword, saltRounds, (err, hashedPassword) => {
+    // 1. Check for errors from validation
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log("Validation Failed:", errors.array());
+      return res.render('register', shopData); 
+    }
+    
+    // 2. Apply Sanitisation (Lab 8b, Task 7) 
+    const first = req.sanitize(req.body.first);
+    const last = req.sanitize(req.body.last);
+    const email = req.sanitize(req.body.email);
+    const username = req.sanitize(req.body.username);
+    const password = req.body.password;
+
+    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
       if (err) {
         console.error(err);
-        return res.send('Error hashing password.');
+        return res.send('Error hashing password');
       }
 
       const sql = `
@@ -65,41 +103,12 @@ module.exports = function (app, shopData) {
         }
 
         res.send(`
-          <h1>Registration Successful ✅</h1>
+          <h1>Registration Successful</h1>
           <p>Hello ${first} ${last}, you are now registered.</p>
-          <p>Your username is <strong>${username}</strong> and a default password (<i>password123</i>) was securely hashed.</p>
-          <p><a href="/">⬅ Back to Home</a></p>
+          <p>Your username is <strong>${username}</strong>. Your password has been securely hashed.</p>
+          <p><a href="/login">Go to login</a></p>
         `);
       });
-    });
-  });
-
-  // -------------------------
-  // BOOK LIST PAGE
-  // -------------------------
-  app.get('/books', (req, res) => {
-    const sql = 'SELECT * FROM books';
-    shopData.db.query(sql, (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send('Error fetching books');
-      }
-      res.render('books_list', { ...shopData, books: results });
-    });
-  });
-
-  // -------------------------
-  // INDIVIDUAL BOOK PAGE
-  // -------------------------
-  app.get('/books/:id', (req, res) => {
-    const bookId = req.params.id;
-    const sql = 'SELECT * FROM books WHERE id = ?';
-    shopData.db.query(sql, [bookId], (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send('Error fetching book');
-      }
-      res.render('book_detail', { ...shopData, book: results[0] });
     });
   });
 
@@ -116,15 +125,15 @@ module.exports = function (app, shopData) {
   app.post('/loggedin', (req, res) => {
     const { username, password } = req.body;
 
-    const sql = 'SELECT * FROM users WHERE username = ?';
-    shopData.db.query(sql, [username], (err, results) => {
+    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
       if (err) {
         console.error(err);
-        return res.send('Database error.');
+        return res.send('Database error');
       }
 
       if (results.length === 0) {
-        return res.send('❌ Login failed: invalid username or password.');
+        recordAudit(username, false, req);
+        return res.send('Login failed: invalid username or password.');
       }
 
       const user = results[0];
@@ -132,23 +141,28 @@ module.exports = function (app, shopData) {
       bcrypt.compare(password, user.hashedPassword, (err2, match) => {
         if (err2) {
           console.error(err2);
-          return res.send('Error verifying password.');
+          return res.send('Error comparing passwords');
         }
 
         if (match) {
           recordAudit(username, true, req);
+          
+          // ADDITION: Save user session here, when login is successful
+          req.session.userId = user.username; 
+          
           res.send(`<h1>Login Successful</h1><p>Welcome, ${user.first_name}!</p>`);
         } else {
-          res.send('❌ Login failed: invalid username or password.');
+          recordAudit(username, false, req);
+          res.send('Login failed: invalid username or password.');
         }
       });
     });
   });
 
   // -------------------------
-  // USERS LIST (NO PASSWORDS)
+  // USERS LIST (PROTECTED) (Lab 8a, Task 3 + XSS Fix)
   // -------------------------
-  app.get('/users/list', (req, res) => {
+  app.get('/users/list', redirectLogin, (req, res) => { 
     db.query(
       'SELECT username, first_name, last_name, email FROM users',
       (err, results) => {
@@ -156,15 +170,104 @@ module.exports = function (app, shopData) {
           console.error(err);
           return res.send('Error fetching users');
         }
-        res.render('users_list', { users: results, shopName: shopData.shopName });
+        
+        // FIX: Sanitize all user data fields before rendering to prevent XSS
+        const sanitizedUsers = results.map(user => ({
+            username: req.sanitize(user.username),
+            first_name: req.sanitize(user.first_name),
+            last_name: req.sanitize(user.last_name),
+            email: req.sanitize(user.email)
+        }));
+
+        res.render('users_list', { users: sanitizedUsers, shopName: shopData.shopName });
       }
     );
   });
+  
+  // -------------------------
+  // BOOK LIST ROUTE (XSS Fix)
+  // -------------------------
+  app.get('/books', (req, res) => { 
+    db.query(
+      'SELECT id, name, price FROM books',
+      (err, results) => {
+        if (err) {
+          console.error(err);
+          return res.send('Error fetching books');
+        }
+        // Sanitize ALL book names before rendering
+        const sanitizedBooks = results.map(sanitizeBookData); 
+        res.render('book_list', { books: sanitizedBooks, shopName: shopData.shopName });
+      }
+    );
+  });
+  
+  // -------------------------
+  // BOOK DETAIL ROUTE (XSS/SQL Fix)
+  // -------------------------
+  app.get('/books/:id', (req, res) => { 
+    // FIX 1: Sanitize ID input before use (SQL Injection defense)
+    const bookId = req.sanitize(req.params.id); 
+    db.query(
+      'SELECT id, name, price FROM books WHERE id = ?', [bookId],
+      (err, results) => {
+        if (err || results.length === 0) {
+          console.error(err);
+          return res.send('Book not found');
+        }
+        // FIX 2: Sanitize the single book result (XSS defense)
+        const sanitizedBook = sanitizeBookData(results[0]); 
+        res.render('book_details', { book: sanitizedBook, shopName: shopData.shopName });
+      }
+    );
+  });
+  
+  // -------------------------
+  // SEARCH RESULT ROUTE (SQL Injection & XSS Fix)
+  // -------------------------
+  app.get('/search-result', (req, res) => {
+    // FIX 1: Sanitize the user input immediately to prevent XSS
+    const keyword = req.sanitize(req.query.keyword); 
+
+    // FIX 2: Use parameterized query (SQL Injection protection)
+    let sqlquery = "SELECT * FROM books WHERE name LIKE ?"; 
+    const searchPattern = '%' + keyword + '%';
+
+    db.query(sqlquery, [searchPattern], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.send('Error during search');
+        }
+        
+        // Sanitize results before rendering
+        const sanitizedResults = results.map(book => sanitizeBookData(book)); 
+        
+        // Assuming your search results are rendered in a template named 'search-results'
+        res.render('search-results', { 
+            results: sanitizedResults, 
+            shopName: shopData.shopName, 
+            keyword: keyword 
+        });
+    });
+});
+
 
   // -------------------------
-  // AUDIT LOG VIEW
+  // LOGOUT ROUTE (Lab 8a, Task 4)
   // -------------------------
-  app.get('/audit', (req, res) => {
+  app.get('/logout', redirectLogin, (req,res) => {
+    req.session.destroy(err => { 
+        if (err) {
+            return res.redirect('./') 
+        }
+        res.send('you are now logged out. <a href='+'./'+'>Home</a>');
+    })
+  });
+
+  // -------------------------
+  // AUDIT LOG VIEW (Protected for security/compliance)
+  // -------------------------
+  app.get('/audit', redirectLogin, (req, res) => { 
     db.query(
       'SELECT * FROM login_audit ORDER BY ts DESC',
       (err, results) => {
@@ -178,16 +281,20 @@ module.exports = function (app, shopData) {
   });
 
   // -------------------------
-  // AUDIT HELPER FUNCTION
+  // AUDIT HELPER FUNCTION (Security Fix)
   // -------------------------
   function recordAudit(username, success, req) {
+    // FIX: Sanitize the username and user-agent before saving to prevent XSS in audit log
+    const sanitizedUsername = req.sanitize(username); 
+    const sanitizedUa = req.sanitize(req.headers['user-agent'] || ''); 
+    
     const ip = req.ip;
-    const ua = req.headers['user-agent'] || '';
     const sql = `
       INSERT INTO login_audit (username, success, ip_address, user_agent)
       VALUES (?, ?, ?, ?)
     `;
-    db.query(sql, [username, success ? 1 : 0, ip, ua], (err) => {
+    // Use sanitized variables for the query:
+    db.query(sql, [sanitizedUsername, success ? 1 : 0, ip, sanitizedUa], (err) => {
       if (err) console.error('Error saving audit record:', err);
     });
   }
