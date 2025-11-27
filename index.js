@@ -1,35 +1,103 @@
-// index.js
+// ---------------------------------------------
+// IMPORT MODULES
+// ---------------------------------------------
 const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
+const ejs = require('ejs');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+const session = require('express-session'); 
+const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
-const mainRouter = require('./routes/main'); // <- your route file
-
+// ---------------------------------------------
+// CREATE EXPRESS APP
+// ---------------------------------------------
 const app = express();
+const port = 8000; // CRITICAL: Use the correct port
 
-// ----- View Engine Setup -----
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+// ---------------------------------------------
+// LOG STARTUP
+// ---------------------------------------------
+console.log('✅ Starting Bertie\'s Books server...');
+console.log('🔍 Checking database connection...');
 
-// ----- Middleware -----
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// ----- Routes -----
-app.use('/', mainRouter); // root route handled by main.js
-
-// ----- 404 -----
-app.use((req, res, next) => {
-  res.status(404).render('error', { message: 'Page not found' });
+// ---------------------------------------------
+// SETUP MYSQL CONNECTION POOL
+// ---------------------------------------------
+const db = mysql.createPool({
+  host: process.env.BB_HOST || 'localhost',
+  user: process.env.BB_USER,
+  password: process.env.BB_PASSWORD,
+  database: process.env.BB_DATABASE
 });
 
-// ----- Start Server -----
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Make the db global for route access
+global.db = db;
 
-module.exports = app;
+// ---------------------------------------------
+// TEMPLATE DATA (Defining basePath for VM navigation)
+// ---------------------------------------------
+const shopData = { 
+    shopName: "Bertie's Books",
+    // CRITICAL: Base path must be defined here for routing and links
+    basePath: '/usr/428' 
+};
+
+// ---------------------------------------------
+// MIDDLEWARE
+// ---------------------------------------------
+// Session Middleware (Lab 8a)
+app.use(session({
+    secret: 'somerandomstuff', 
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 600000 
+    }
+}));
+
+// Sanitisation Middleware (Lab 8b, Task 6)
+app.use(expressSanitizer()); 
+
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// FIX 1: Mount static files at the BASE PATH
+app.use(shopData.basePath, express.static(__dirname + '/public')); 
+
+// ---------------------------------------------
+// VIEW ENGINE
+// ---------------------------------------------
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+app.engine('html', ejs.renderFile);
+
+// ---------------------------------------------
+// ROUTES (Router Mounting Fix)
+// ---------------------------------------------
+
+// 1. Require the routes function
+const mainRoutes = require('./routes/main'); 
+
+// 2. Create an Express Router instance
+const router = express.Router(); 
+
+// 3. Pass the Router instance and shopData to the main.js function
+mainRoutes(router, shopData);
+
+// 4. Mount the Router instance at the required BASE PATH
+// This handles all specific routes like /usr/428/login
+app.use(shopData.basePath, router); 
+
+// 5. CRITICAL FIX: Handle the generic server root redirect
+// This forces any user hitting the bare server root to redirect to the correct base path.
+// This is done LAST to avoid conflicts with defined routes.
+app.use('/', (req, res) => {
+    res.redirect(shopData.basePath + '/');
+});
+
+// ---------------------------------------------
+// START SERVER
+// ---------------------------------------------
+app.listen(port, () => {
+  console.log(`🚀 Example app listening on http://localhost:${port}/`);
+});
