@@ -5,7 +5,11 @@ module.exports = function (app, shopData) {
   // -------------------------
   // IMPORT MODULES 
   // -------------------------
+<<<<<<< HEAD
   const { check, validationResult } = require('express-validator'); 
+=======
+  const { check, validationResult } = require('express-validator');
+>>>>>>> d04cfe8cf1509c6ec5368d3e43593ab338663a08
   const bcrypt = require('bcrypt');
   const saltRounds = 10;
   
@@ -78,12 +82,21 @@ module.exports = function (app, shopData) {
       return res.render('register', shopData); 
     }
     
+<<<<<<< HEAD
     // 2. Apply Sanitisation (Lab 8b, Task 7) 
+=======
+    // 2. Apply Sanitisation (Lab 8b, Task 7) - AFTER validation passes
+    // NOTE: req.sanitize is available because app.use(expressSanitizer()) is in index.js
+>>>>>>> d04cfe8cf1509c6ec5368d3e43593ab338663a08
     const first = req.sanitize(req.body.first);
     const last = req.sanitize(req.body.last);
     const email = req.sanitize(req.body.email);
     const username = req.sanitize(req.body.username);
+<<<<<<< HEAD
     const password = req.body.password;
+=======
+    const password = req.body.password; // Do not sanitize password
+>>>>>>> d04cfe8cf1509c6ec5368d3e43593ab338663a08
 
     bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
       if (err) {
@@ -96,6 +109,7 @@ module.exports = function (app, shopData) {
         VALUES (?, ?, ?, ?, ?)
       `;
 
+      // Use the sanitized variables (first, last, email, username) for DB insertion
       db.query(sql, [username, first, last, email, hashedPassword], (err2) => {
         if (err2) {
           console.error(err2);
@@ -150,7 +164,11 @@ module.exports = function (app, shopData) {
           // ADDITION: Save user session here, when login is successful
           req.session.userId = user.username; 
           
+<<<<<<< HEAD
           res.send(`<h1>Login Successful</h1><p>Welcome, ${user.first_name}!</p>`);
+=======
+          res.send(`<h1>Login Successful</h1><p>Welcome, ${user.first_name}! <a href="/users/list">View Users</a></p>`);
+>>>>>>> d04cfe8cf1509c6ec5368d3e43593ab338663a08
         } else {
           recordAudit(username, false, req);
           res.send('Login failed: invalid username or password.');
@@ -160,7 +178,11 @@ module.exports = function (app, shopData) {
   });
 
   // -------------------------
+<<<<<<< HEAD
   // USERS LIST (PROTECTED) (Lab 8a, Task 3 + XSS Fix)
+=======
+  // USERS LIST (PROTECTED) (Lab 8a, Task 3)
+>>>>>>> d04cfe8cf1509c6ec5368d3e43593ab338663a08
   // -------------------------
   app.get('/users/list', redirectLogin, (req, res) => { 
     db.query(
@@ -185,6 +207,7 @@ module.exports = function (app, shopData) {
   });
   
   // -------------------------
+<<<<<<< HEAD
   // BOOK LIST ROUTE (XSS Fix)
   // -------------------------
   app.get('/books', (req, res) => { 
@@ -268,6 +291,23 @@ module.exports = function (app, shopData) {
   // AUDIT LOG VIEW (Protected for security/compliance)
   // -------------------------
   app.get('/audit', redirectLogin, (req, res) => { 
+=======
+  // LOGOUT ROUTE (Lab 8a, Task 4)
+  // -------------------------
+  app.get('/logout', redirectLogin, (req,res) => {
+    req.session.destroy(err => { 
+        if (err) {
+            return res.redirect('./') 
+        }
+        res.send('you are now logged out. <a href='+'./'+'>Home</a>');
+    })
+  });
+
+  // -------------------------
+  // AUDIT LOG VIEW (Protected for security/compliance)
+  // -------------------------
+  app.get('/audit', redirectLogin, (req, res) => { // ADDITION: Protected by redirectLogin
+>>>>>>> d04cfe8cf1509c6ec5368d3e43593ab338663a08
     db.query(
       'SELECT * FROM login_audit ORDER BY ts DESC',
       (err, results) => {
