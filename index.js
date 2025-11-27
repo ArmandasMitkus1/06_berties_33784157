@@ -35,8 +35,6 @@ const db = mysql.createPool({
 global.db = db;
 
 // ---------------------------------------------
-// MIDDLEWARE
-// ---------------------------------------------
 // TEMPLATE DATA (Defining basePath for VM navigation)
 // ---------------------------------------------
 const shopData = { 
@@ -45,6 +43,9 @@ const shopData = {
     basePath: '/usr/428' 
 };
 
+// ---------------------------------------------
+// MIDDLEWARE
+// ---------------------------------------------
 // Session Middleware (Lab 8a)
 app.use(session({
     secret: 'somerandomstuff', 
@@ -84,12 +85,12 @@ const router = express.Router();
 mainRoutes(router, shopData);
 
 // 4. Mount the Router instance at the required BASE PATH
+// This handles all specific routes like /usr/428/login
 app.use(shopData.basePath, router); 
 
-// 5. CRITICAL FIX: Handle generic root access
-app.use('/', (req, res) => {
-    res.redirect(shopData.basePath + '/');
-});
+// 5. CRITICAL FIX: REMOVE THE CONFLICTING ROOT HANDLER
+// The home route ('/') is now correctly handled inside routes/main.js
+// We must not have redundant app.use('/') or it causes the loop.
 
 // ---------------------------------------------
 // START SERVER
