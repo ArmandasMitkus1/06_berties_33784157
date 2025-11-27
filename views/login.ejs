@@ -1,6 +1,6 @@
 <h1>Login</h1>
 
-<form action="/loggedin" method="post">
+<form action="<%= basePath %>/loggedin" method="post">
   <label>Username</label><br>
   <input type="text" name="username" required><br><br>
 
@@ -10,4 +10,4 @@
   <button type="submit">Login</button>
 </form>
 
-<p><a href="/">Return Home</a> | <a href="/logout">Logout</a></p>
+<p><a href="<%= basePath %>/">Return Home</a> | <a href="<%= basePath %>/logout">Logout</a></p>
