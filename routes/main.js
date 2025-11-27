@@ -14,7 +14,7 @@ module.exports = function (router, shopData) {
   // AUTHORISATION MIDDLEWARE (Lab 8a, Task 3)
   // -------------------------
   const redirectLogin = (req, res, next) => {
-    // Note: Redirects here must still use the full basePath for client redirection
+    // FIX: Redirect must use shopData.basePath for client redirection
     if (!req.session.userId) { 
         res.redirect(shopData.basePath + '/login') 
     } else {
@@ -40,19 +40,17 @@ module.exports = function (router, shopData) {
   // -------------------------
   // HOME PAGE
   // -------------------------
-  // FIX: Change app.get to router.get
+  // FIX: Change app.get to router.get. This path is now relative to /usr/428.
   router.get('/', (req, res) => {
     res.render('index', shopData);
   });
 
   // (Optional) ABOUT PAGE
-  // FIX: Change app.get to router.get
   router.get('/about', (req, res) => {
     res.render('about', shopData);
   });
 
   // (Optional) SEARCH PAGE
-  // FIX: Change app.get to router.get
   router.get('/search', (req, res) => {
     res.render('search', shopData);
   });
@@ -60,7 +58,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // REGISTER FORM
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/register', (req, res) => {
     res.render('register', shopData); 
   });
@@ -68,7 +65,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // HANDLE REGISTRATION (Lab 8b: Validation and Sanitisation)
   // -------------------------
-  // FIX: Change app.post to router.post
   router.post('/registered', 
     // Validation Middleware (Lab 8b, Tasks 2 & 3)
     [ 
@@ -122,7 +118,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // LOGIN FORM
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/login', (req, res) => {
     res.render('login', shopData);
   });
@@ -130,7 +125,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // HANDLE LOGIN (Lab 8a, Task 3: Save Session)
   // -------------------------
-  // FIX: Change app.post to router.post
   router.post('/loggedin', (req, res) => {
     const { username, password } = req.body;
 
@@ -171,7 +165,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // USERS LIST (PROTECTED) (Lab 8a, Task 3 + XSS Fix)
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/users/list', redirectLogin, (req, res) => { 
     db.query(
       'SELECT username, first_name, last_name, email FROM users',
@@ -197,7 +190,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // BOOK LIST ROUTE (XSS Fix)
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/books', (req, res) => { 
     db.query(
       'SELECT id, name, price FROM books',
@@ -216,7 +208,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // BOOK DETAIL ROUTE (XSS/SQL Fix)
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/books/:id', (req, res) => { 
     // FIX 1: Sanitize ID input before use (SQL Injection defense)
     const bookId = req.sanitize(req.params.id); 
@@ -237,7 +228,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // SEARCH RESULT ROUTE (SQL Injection & XSS Fix)
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/search-result', (req, res) => {
     // FIX 1: Sanitize the user input immediately to prevent XSS
     const keyword = req.sanitize(req.query.keyword); 
@@ -268,7 +258,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // LOGOUT ROUTE (Lab 8a, Task 4)
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/logout', redirectLogin, (req,res) => {
     req.session.destroy(err => { 
         if (err) {
@@ -282,7 +271,6 @@ module.exports = function (router, shopData) {
   // -------------------------
   // AUDIT LOG VIEW (Protected for security/compliance)
   // -------------------------
-  // FIX: Change app.get to router.get
   router.get('/audit', redirectLogin, (req, res) => { 
     db.query(
       'SELECT * FROM login_audit ORDER BY ts DESC',

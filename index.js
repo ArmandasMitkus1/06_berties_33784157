@@ -6,7 +6,7 @@ const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const session = require('express-session'); 
-const expressSanitizer = require('express-sanitizer'); // Lab 8b: Sanitisation setup
+const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 // ---------------------------------------------
@@ -47,6 +47,15 @@ db.getConnection((err, connection) => {
 global.db = db;
 
 // ---------------------------------------------
+// TEMPLATE DATA (Adding basePath for VM navigation)
+// ---------------------------------------------
+const shopData = { 
+    shopName: "Bertie's Books",
+    // CRITICAL: Base path must be defined here for routing and links
+    basePath: '/usr/428' 
+};
+
+// ---------------------------------------------
 // MIDDLEWARE
 // ---------------------------------------------
 // Session Middleware (Lab 8a)
@@ -63,7 +72,9 @@ app.use(session({
 app.use(expressSanitizer()); 
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
+
+// FIX 1: Mount static files at the BASE PATH
+app.use(shopData.basePath, express.static(__dirname + '/public')); 
 
 // ---------------------------------------------
 // VIEW ENGINE
@@ -71,15 +82,6 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('html', ejs.renderFile);
-
-// ---------------------------------------------
-// TEMPLATE DATA (Adding basePath for VM navigation)
-// ---------------------------------------------
-const shopData = { 
-    shopName: "Bertie's Books",
-    // This is the critical piece of data
-    basePath: '/usr/428' 
-};
 
 // ---------------------------------------------
 // ROUTES (FIX: Using Router and Mounting)
