@@ -73,9 +73,13 @@ app.set('view engine', 'ejs');
 app.engine('html', ejs.renderFile);
 
 // ---------------------------------------------
-// TEMPLATE DATA
+// TEMPLATE DATA (FIX: Adding basePath for VM navigation)
 // ---------------------------------------------
-const shopData = { shopName: "Bertie's Books" };
+const shopData = { 
+    shopName: "Bertie's Books",
+    // This assumes your application is always mounted under this path on the VM
+    basePath: '/usr/428' 
+};
 
 // ---------------------------------------------
 // ROUTES

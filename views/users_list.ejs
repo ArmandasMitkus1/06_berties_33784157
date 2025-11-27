@@ -6,7 +6,8 @@
   </head>
   <body>
     <h1>Registered Users – <%= shopName %></h1>
-    <p><a href="/">Home</a> | <a href="/register">Register</a> | <a href="/audit">Audit Log</a> | <a href="/logout">Logout</a></p>
+    
+    <p><a href="<%= basePath %>/">Home</a> | <a href="<%= basePath %>/register">Register</a> | <a href="<%= basePath %>/audit">Audit Log</a> | <a href="<%= basePath %>/logout">Logout</a></p>
 
     <% if (users.length === 0) { %>
       <p>No users registered yet.</p>

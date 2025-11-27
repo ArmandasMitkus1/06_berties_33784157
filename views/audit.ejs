@@ -6,7 +6,8 @@
   </head>
   <body>
     <h1>Audit Log – <%= shopName %></h1>
-    <p><a href="/">Home</a> | <a href="/users/list">User List</a> | <a href="/register">Register</a> | <a href="/logout">Logout</a></p>
+    
+    <p><a href="<%= basePath %>/">Home</a> | <a href="<%= basePath %>/users/list">User List</a> | <a href="<%= basePath %>/register">Register</a> | <a href="<%= basePath %>/logout">Logout</a></p>
 
     <% if (entries.length === 0) { %>
       <p>No audit entries yet.</p>
