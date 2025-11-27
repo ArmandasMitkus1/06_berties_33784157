@@ -1,11 +1,12 @@
 // routes/main.js
 
-module.exports = function (app, shopData) {
+// IMPORTANT FIX: Change 'app' to 'router' here
+module.exports = function (router, shopData) {
 
   // -------------------------
   // IMPORT MODULES 
   // -------------------------
-  const { check, validationResult } = require('express-validator');
+  const { check, validationResult } = require('express-validator'); 
   const bcrypt = require('bcrypt');
   const saltRounds = 10;
   
@@ -13,8 +14,9 @@ module.exports = function (app, shopData) {
   // AUTHORISATION MIDDLEWARE (Lab 8a, Task 3)
   // -------------------------
   const redirectLogin = (req, res, next) => {
+    // Note: Redirects here must still use the full basePath for client redirection
     if (!req.session.userId) { 
-        res.redirect('/login') 
+        res.redirect(shopData.basePath + '/login') 
     } else {
         next();
     }
@@ -38,31 +40,36 @@ module.exports = function (app, shopData) {
   // -------------------------
   // HOME PAGE
   // -------------------------
-  app.get('/', (req, res) => {
+  // FIX: Change app.get to router.get
+  router.get('/', (req, res) => {
     res.render('index', shopData);
   });
 
   // (Optional) ABOUT PAGE
-  app.get('/about', (req, res) => {
+  // FIX: Change app.get to router.get
+  router.get('/about', (req, res) => {
     res.render('about', shopData);
   });
 
   // (Optional) SEARCH PAGE
-  app.get('/search', (req, res) => {
+  // FIX: Change app.get to router.get
+  router.get('/search', (req, res) => {
     res.render('search', shopData);
   });
 
   // -------------------------
   // REGISTER FORM
   // -------------------------
-  app.get('/register', (req, res) => {
+  // FIX: Change app.get to router.get
+  router.get('/register', (req, res) => {
     res.render('register', shopData); 
   });
 
   // -------------------------
   // HANDLE REGISTRATION (Lab 8b: Validation and Sanitisation)
   // -------------------------
-  app.post('/registered', 
+  // FIX: Change app.post to router.post
+  router.post('/registered', 
     // Validation Middleware (Lab 8b, Tasks 2 & 3)
     [ 
         check('email').isEmail(),
@@ -78,13 +85,12 @@ module.exports = function (app, shopData) {
       return res.render('register', shopData); 
     }
     
-    // 2. Apply Sanitisation (Lab 8b, Task 7) - AFTER validation passes
-    // NOTE: req.sanitize is available because app.use(expressSanitizer()) is in index.js
+    // 2. Apply Sanitisation (Lab 8b, Task 7) 
     const first = req.sanitize(req.body.first);
     const last = req.sanitize(req.body.last);
     const email = req.sanitize(req.body.email);
     const username = req.sanitize(req.body.username);
-    const password = req.body.password; // Do not sanitize password
+    const password = req.body.password;
 
     bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
       if (err) {
@@ -97,7 +103,6 @@ module.exports = function (app, shopData) {
         VALUES (?, ?, ?, ?, ?)
       `;
 
-      // Use the sanitized variables (first, last, email, username) for DB insertion
       db.query(sql, [username, first, last, email, hashedPassword], (err2) => {
         if (err2) {
           console.error(err2);
@@ -108,7 +113,7 @@ module.exports = function (app, shopData) {
           <h1>Registration Successful</h1>
           <p>Hello ${first} ${last}, you are now registered.</p>
           <p>Your username is <strong>${username}</strong>. Your password has been securely hashed.</p>
-          <p><a href="/login">Go to login</a></p>
+          <p><a href="${shopData.basePath}/login">Go to login</a></p>
         `);
       });
     });
@@ -117,14 +122,16 @@ module.exports = function (app, shopData) {
   // -------------------------
   // LOGIN FORM
   // -------------------------
-  app.get('/login', (req, res) => {
+  // FIX: Change app.get to router.get
+  router.get('/login', (req, res) => {
     res.render('login', shopData);
   });
 
   // -------------------------
   // HANDLE LOGIN (Lab 8a, Task 3: Save Session)
   // -------------------------
-  app.post('/loggedin', (req, res) => {
+  // FIX: Change app.post to router.post
+  router.post('/loggedin', (req, res) => {
     const { username, password } = req.body;
 
     db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
@@ -162,9 +169,10 @@ module.exports = function (app, shopData) {
   });
 
   // -------------------------
-  // USERS LIST (PROTECTED) (Lab 8a, Task 3)
+  // USERS LIST (PROTECTED) (Lab 8a, Task 3 + XSS Fix)
   // -------------------------
-  app.get('/users/list', redirectLogin, (req, res) => { 
+  // FIX: Change app.get to router.get
+  router.get('/users/list', redirectLogin, (req, res) => { 
     db.query(
       'SELECT username, first_name, last_name, email FROM users',
       (err, results) => {
@@ -187,21 +195,95 @@ module.exports = function (app, shopData) {
   });
   
   // -------------------------
+  // BOOK LIST ROUTE (XSS Fix)
+  // -------------------------
+  // FIX: Change app.get to router.get
+  router.get('/books', (req, res) => { 
+    db.query(
+      'SELECT id, name, price FROM books',
+      (err, results) => {
+        if (err) {
+          console.error(err);
+          return res.send('Error fetching books');
+        }
+        // Sanitize ALL book names before rendering
+        const sanitizedBooks = results.map(sanitizeBookData); 
+        res.render('book_list', { books: sanitizedBooks, shopName: shopData.shopName });
+      }
+    );
+  });
+  
+  // -------------------------
+  // BOOK DETAIL ROUTE (XSS/SQL Fix)
+  // -------------------------
+  // FIX: Change app.get to router.get
+  router.get('/books/:id', (req, res) => { 
+    // FIX 1: Sanitize ID input before use (SQL Injection defense)
+    const bookId = req.sanitize(req.params.id); 
+    db.query(
+      'SELECT id, name, price FROM books WHERE id = ?', [bookId],
+      (err, results) => {
+        if (err || results.length === 0) {
+          console.error(err);
+          return res.send('Book not found');
+        }
+        // FIX 2: Sanitize the single book result (XSS defense)
+        const sanitizedBook = sanitizeBookData(results[0]); 
+        res.render('book_details', { book: sanitizedBook, shopName: shopData.shopName });
+      }
+    );
+  });
+  
+  // -------------------------
+  // SEARCH RESULT ROUTE (SQL Injection & XSS Fix)
+  // -------------------------
+  // FIX: Change app.get to router.get
+  router.get('/search-result', (req, res) => {
+    // FIX 1: Sanitize the user input immediately to prevent XSS
+    const keyword = req.sanitize(req.query.keyword); 
+
+    // FIX 2: Use parameterized query (SQL Injection protection)
+    let sqlquery = "SELECT * FROM books WHERE name LIKE ?"; 
+    const searchPattern = '%' + keyword + '%';
+
+    db.query(sqlquery, [searchPattern], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.send('Error during search');
+        }
+        
+        // Sanitize results before rendering
+        const sanitizedResults = results.map(book => sanitizeBookData(book)); 
+        
+        // Assuming your search results are rendered in a template named 'search-results'
+        res.render('search-results', { 
+            results: sanitizedResults, 
+            shopName: shopData.shopName, 
+            keyword: keyword 
+        });
+    });
+});
+
+
+  // -------------------------
   // LOGOUT ROUTE (Lab 8a, Task 4)
   // -------------------------
-  app.get('/logout', redirectLogin, (req,res) => {
+  // FIX: Change app.get to router.get
+  router.get('/logout', redirectLogin, (req,res) => {
     req.session.destroy(err => { 
         if (err) {
             return res.redirect('./') 
         }
-        res.send('you are now logged out. <a href='+'./'+'>Home</a>');
+        // Note: Client redirection must use the full basePath
+        res.send(`you are now logged out. <a href="${shopData.basePath}/">Home</a>`);
     })
   });
 
   // -------------------------
   // AUDIT LOG VIEW (Protected for security/compliance)
   // -------------------------
-  app.get('/audit', redirectLogin, (req, res) => { // ADDITION: Protected by redirectLogin
+  // FIX: Change app.get to router.get
+  router.get('/audit', redirectLogin, (req, res) => { 
     db.query(
       'SELECT * FROM login_audit ORDER BY ts DESC',
       (err, results) => {

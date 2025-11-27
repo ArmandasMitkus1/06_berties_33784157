@@ -73,18 +73,30 @@ app.set('view engine', 'ejs');
 app.engine('html', ejs.renderFile);
 
 // ---------------------------------------------
-// TEMPLATE DATA (FIX: Adding basePath for VM navigation)
+// TEMPLATE DATA (Adding basePath for VM navigation)
 // ---------------------------------------------
 const shopData = { 
     shopName: "Bertie's Books",
-    // This assumes your application is always mounted under this path on the VM
+    // This is the critical piece of data
     basePath: '/usr/428' 
 };
 
 // ---------------------------------------------
-// ROUTES
+// ROUTES (FIX: Using Router and Mounting)
 // ---------------------------------------------
-require('./routes/main')(app, shopData);
+
+// 1. Require the routes function
+const mainRoutes = require('./routes/main'); 
+
+// 2. Create an Express Router instance
+const router = express.Router(); 
+
+// 3. Pass the Router instance and shopData to the main.js function
+mainRoutes(router, shopData);
+
+// 4. Mount the Router instance at the required BASE PATH
+// THIS FIXES THE "Cannot GET /usr/428/..." ERROR
+app.use(shopData.basePath, router); 
 
 // ---------------------------------------------
 // START SERVER
