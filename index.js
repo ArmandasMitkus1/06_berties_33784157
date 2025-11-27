@@ -5,6 +5,8 @@ const express = require('express');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
+const session = require('express-session'); // Session setup (Lab 8a)
+const expressSanitizer = require('express-sanitizer'); // <-- NEW: Import sanitisation module [cite: 119]
 require('dotenv').config();
 
 // ---------------------------------------------
@@ -47,6 +49,21 @@ global.db = db;
 // ---------------------------------------------
 // MIDDLEWARE
 // ---------------------------------------------
+// Session Middleware (Lab 8a)
+app.use(session({
+    secret: 'somerandomstuff',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 600000 
+    }
+}));
+
+// ** NEW: Sanitisation Middleware (Lab 8b, Task 6) **
+// Create an input sanitizer
+app.use(expressSanitizer()); // [cite: 122, 123]
+// ----------------------------------------------------
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
