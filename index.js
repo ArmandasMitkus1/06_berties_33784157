@@ -31,21 +31,11 @@ const db = mysql.createPool({
   database: process.env.BB_DATABASE
 });
 
-// Test DB connection immediately
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('❌ Database connection failed:');
-    console.error(err);
-    process.exit(1); 
-  } else {
-    console.log('✅ Connected to MySQL successfully.');
-    connection.release();
-  }
-});
-
 // Make the db global for route access
 global.db = db;
 
+// ---------------------------------------------
+// MIDDLEWARE
 // ---------------------------------------------
 // TEMPLATE DATA (Defining basePath for VM navigation)
 // ---------------------------------------------
@@ -55,9 +45,6 @@ const shopData = {
     basePath: '/usr/428' 
 };
 
-// ---------------------------------------------
-// MIDDLEWARE
-// ---------------------------------------------
 // Session Middleware (Lab 8a)
 app.use(session({
     secret: 'somerandomstuff', 
@@ -84,7 +71,7 @@ app.set('view engine', 'ejs');
 app.engine('html', ejs.renderFile);
 
 // ---------------------------------------------
-// ROUTES (FIX: Using Router and Mounting)
+// ROUTES (Router Mounting Fix)
 // ---------------------------------------------
 
 // 1. Require the routes function
@@ -97,8 +84,12 @@ const router = express.Router();
 mainRoutes(router, shopData);
 
 // 4. Mount the Router instance at the required BASE PATH
-// THIS FIXES THE "Cannot GET /usr/428/..." ERROR
 app.use(shopData.basePath, router); 
+
+// 5. CRITICAL FIX: Handle generic root access
+app.use('/', (req, res) => {
+    res.redirect(shopData.basePath + '/');
+});
 
 // ---------------------------------------------
 // START SERVER
