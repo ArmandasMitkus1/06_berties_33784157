@@ -47,7 +47,7 @@ db.getConnection((err, connection) => {
 global.db = db;
 
 // ---------------------------------------------
-// TEMPLATE DATA (Adding basePath for VM navigation)
+// TEMPLATE DATA (Defining basePath for VM navigation)
 // ---------------------------------------------
 const shopData = { 
     shopName: "Bertie's Books",

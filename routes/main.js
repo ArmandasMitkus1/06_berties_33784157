@@ -14,7 +14,7 @@ module.exports = function (router, shopData) {
   // AUTHORISATION MIDDLEWARE (Lab 8a, Task 3)
   // -------------------------
   const redirectLogin = (req, res, next) => {
-    // FIX: Redirect must use shopData.basePath for client redirection
+    // CRITICAL FIX: Redirection must use shopData.basePath for client-side routing
     if (!req.session.userId) { 
         res.redirect(shopData.basePath + '/login') 
     } else {
@@ -38,9 +38,8 @@ module.exports = function (router, shopData) {
   };
 
   // -------------------------
-  // HOME PAGE
+  // HOME PAGE (Fix: Must be router.get and UNPROTECTED)
   // -------------------------
-  // FIX: Change app.get to router.get. This path is now relative to /usr/428.
   router.get('/', (req, res) => {
     res.render('index', shopData);
   });
@@ -261,9 +260,9 @@ module.exports = function (router, shopData) {
   router.get('/logout', redirectLogin, (req,res) => {
     req.session.destroy(err => { 
         if (err) {
-            return res.redirect('./') 
+            return res.redirect(shopData.basePath + '/') 
         }
-        // Note: Client redirection must use the full basePath
+        // CRITICAL FIX: Client redirection must use the full basePath
         res.send(`you are now logged out. <a href="${shopData.basePath}/">Home</a>`);
     })
   });
