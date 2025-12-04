@@ -1,0 +1,14 @@
+<h1>🌤 Weather Search — <%= shopName %></h1>
+
+<form action="<%= basePath %>/weather" method="POST">
+    <input type="text" name="city" placeholder="Enter city" required>
+    <button type="submit">Search 🔍</button>
+</form>
+
+<% if (typeof result !== "undefined") { %>
+    <h2>Results for <%= result.name %>:</h2>
+    <p>Temperature: <%= result.main.temp %>°C</p>
+    <p>Weather: <%= result.weather[0].description %></p>
+<% } %>
+
+<p><a href="<%= basePath %>/">⬅ Back</a></p>

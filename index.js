@@ -1,23 +1,23 @@
-//-----------------------------------------------------
+// -----------------------------------------------------
 // IMPORTS
-//-----------------------------------------------------
+// -----------------------------------------------------
 const express = require('express');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
-const session = require('express-session'); 
+const session = require('express-session');
 const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
-//-----------------------------------------------------
-// APP
-//-----------------------------------------------------
+// -----------------------------------------------------
+// INITIALISE
+// -----------------------------------------------------
 const app = express();
 const port = 8000;
 
-//-----------------------------------------------------
+// -----------------------------------------------------
 // DATABASE
-//-----------------------------------------------------
+// -----------------------------------------------------
 const db = mysql.createPool({
   host: process.env.BB_HOST || "localhost",
   user: process.env.BB_USER,
@@ -26,17 +26,17 @@ const db = mysql.createPool({
 });
 global.db = db;
 
-//-----------------------------------------------------
-// REQUIRED FOR DOC.GOLD SERVER ❗
-//-----------------------------------------------------
+// -----------------------------------------------------
+// SHOP CONFIG  (YOU ARE HERE /usr/428)
+// -----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "/usr/428"   // <── FIX THAT MAKES LINKS WORK
+  basePath: "/usr/428"   // 🔥 THIS FIXES NAVIGATION
 };
 
-//-----------------------------------------------------
+// -----------------------------------------------------
 // MIDDLEWARE
-//-----------------------------------------------------
+// -----------------------------------------------------
 app.use(session({
   secret: "somerandomstuff",
   resave: false,
@@ -46,29 +46,30 @@ app.use(session({
 
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(shopData.basePath, express.static(__dirname + "/public"));
 
-app.use(express.static(__dirname + "/public"));
-
-//-----------------------------------------------------
-// VIEWS
-//-----------------------------------------------------
+// -----------------------------------------------------
+// VIEW ENGINE
+// -----------------------------------------------------
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
-//-----------------------------------------------------
+// -----------------------------------------------------
 // ROUTES
-//-----------------------------------------------------
-const Router = require("express").Router;
-const router = Router();
+// -----------------------------------------------------
+const router = require("express").Router();
 
-require("./routes/main")(router, shopData);
-require("./routes/cart")(router, shopData); // LAB 9
+require("./routes/main")(router, shopData);    // pages
+require("./routes/cart")(router, shopData);    // 🛒 LAB 10 (bonus)
+require("./routes/api")(router, shopData);     // 🔥 NEW LAB 9
+require("./routes/weather")(router, shopData); // 🔥 NEW LAB 9
 
-app.use(shopData.basePath, router); // <── MOUNTED CORRECTLY
+app.use(shopData.basePath, router);
 
-//-----------------------------------------------------
-// SERVER
-//-----------------------------------------------------
-app.listen(port, () => {
-  console.log(`🔥 Running at http://localhost:${port}${shopData.basePath}`);
-});
+// HOME REDIRECT
+app.get("/", (req, res) => res.redirect(shopData.basePath + "/"));
+
+// -----------------------------------------------------
+// START SERVER
+// -----------------------------------------------------
+app.listen(port, () => console.log(`🔥 Live → http://doc.gold.ac.uk/usr/428/`));
