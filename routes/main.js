@@ -11,26 +11,21 @@ module.exports = function (router, shopData) {
 // LOGIN PROTECTION
 //---------------------------------------------------------
     const redirectLogin = (req, res, next) => {
-        if (!req.session || !req.session.userId) {
-            return res.redirect(shopData.basePath + '/login');
-        }
+        if (!req.session?.userId) return res.redirect("/login");
         next();
     };
 
 //---------------------------------------------------------
-// SANITISE BOOK INFO
+// SANITISE BOOKS
 //---------------------------------------------------------
-    const sanitizeBookData = (req, book) => {
-        if (!book) return null;
-        return {
-            id: book.id,
-            name: req.sanitize(book.name),
-            price: book.price
-        };
-    };
+    const sanitizeBookData = (req, book) => ({
+        id: book.id,
+        name: req.sanitize(book.name),
+        price: book.price
+    });
 
 //---------------------------------------------------------
-// BASIC PAGES
+// STATIC PAGES
 //---------------------------------------------------------
     router.get('/', (req, res) => res.render('index', shopData));
     router.get('/about', (req, res) => res.render('about', shopData));
@@ -38,7 +33,7 @@ module.exports = function (router, shopData) {
 
 
 //---------------------------------------------------------
-// REGISTER (FIXED + CLEAN)
+// REGISTER
 //---------------------------------------------------------
     router.get('/register', (req, res) => res.render('register', shopData));
 
@@ -60,7 +55,7 @@ module.exports = function (router, shopData) {
             const password = req.body.password;
 
             bcrypt.hash(password, saltRounds, (err, hash) => {
-                if (err) return res.send("Password hashing error.");
+                if (err) return res.send("Error hashing password ❌");
 
                 const sql = `INSERT INTO users (username, first_name, last_name, email, hashedPassword)
                              VALUES (?, ?, ?, ?, ?)`;
@@ -71,7 +66,7 @@ module.exports = function (router, shopData) {
                     res.send(`
                         <h1>Registration Successful 🎉</h1>
                         <p>Welcome <b>${first} ${last}</b></p>
-                        <a href="${shopData.basePath}/login">Login Now</a>
+                        <a href="/login">Login</a>
                     `);
                 });
             });
@@ -84,58 +79,61 @@ module.exports = function (router, shopData) {
     router.get('/login', (req, res) => res.render('login', shopData));
 
     router.post('/loggedin', (req, res) => {
-
         const { username, password } = req.body;
 
         db.query("SELECT * FROM users WHERE username=?", [username], (err, rows) => {
-            if (err) return res.send("Database Error");
-            if (!rows.length) return res.send("❌ Invalid username or password.");
+            if (!rows?.length) return res.send("❌ Invalid login");
+            
+            bcrypt.compare(password, rows[0].hashedPassword, (err2, match) => {
+                if (!match) return res.send("❌ Invalid login");
 
-            const user = rows[0];
-
-            bcrypt.compare(password, user.hashedPassword, (err2, match) => {
-                if (!match) return res.send("❌ Invalid username or password.");
-
-                req.session.userId = user.username;
-                res.send(`<h1>Login Successful ✔</h1><p>Welcome ${user.first_name}</p>`);
+                req.session.userId = rows[0].username;
+                res.send(`<h1>Welcome ${rows[0].first_name} ✔</h1>`);
             });
         });
     });
 
 
 //---------------------------------------------------------
-// USERS LIST (PROTECTED)
+// USERS (PROTECTED)
 //---------------------------------------------------------
     router.get('/users/list', redirectLogin, (req, res) => {
         db.query("SELECT username, first_name, last_name, email FROM users", (err, rows) => {
-            if (err) return res.send("Error fetching users");
+            if (err) return res.send("❌ Could not fetch users");
 
-            const safeUsers = rows.map(u => ({
-                username: req.sanitize(u.username),
-                first_name: req.sanitize(u.first_name),
-                last_name: req.sanitize(u.last_name),
-                email: req.sanitize(u.email)
-            }));
-
-            res.render("users_list", { users: safeUsers, shopName: shopData.shopName });
+            res.render("users_list", {
+                users: rows.map(u => ({
+                    username: req.sanitize(u.username),
+                    first_name: req.sanitize(u.first_name),
+                    last_name: req.sanitize(u.last_name),
+                    email: req.sanitize(u.email)
+                })),
+                shopName: shopData.shopName
+            });
         });
     });
 
 
 //---------------------------------------------------------
-// BOOKS
+// BOOKS (FULLY FIXED)
 //---------------------------------------------------------
     router.get('/books', (req, res) => {
         db.query("SELECT id, name, price FROM books", (err, rows) => {
-            if (err) return res.send("Error fetching books");
-            res.render("book_list", { books: rows.map(b => sanitizeBookData(req, b)), shopName: shopData.shopName });
+            if (err) return res.send("❌ Book fetch error");
+            res.render("books_list", {        // << FIXED NAME
+                books: rows.map(b => sanitizeBookData(req, b)),
+                shopName: shopData.shopName
+            });
         });
     });
 
     router.get('/books/:id', (req, res) => {
         db.query("SELECT id, name, price FROM books WHERE id=?", [req.params.id], (err, rows) => {
-            if (!rows.length) return res.send("Book not found");
-            res.render("book_detail", { book: sanitizeBookData(req, rows[0]), shopName: shopData.shopName });
+            if (!rows?.length) return res.send("📕 Book not found");
+            res.render("book_detail", {       // this one was correct already
+                book: sanitizeBookData(req, rows[0]),
+                shopName: shopData.shopName
+            });
         });
     });
 
@@ -147,8 +145,8 @@ module.exports = function (router, shopData) {
         db.query("SELECT * FROM books WHERE name LIKE ?", [`%${req.query.keyword}%`], (err, rows) => {
             res.render("search-results", {
                 results: rows.map(b => sanitizeBookData(req, b)),
-                shopName: shopData.shopName,
-                keyword: req.query.keyword
+                keyword: req.query.keyword,
+                shopName: shopData.shopName
             });
         });
     });
@@ -158,7 +156,8 @@ module.exports = function (router, shopData) {
 // LOGOUT
 //---------------------------------------------------------
     router.get('/logout', redirectLogin, (req, res) => {
-        req.session.destroy(() => res.redirect(shopData.basePath + "/"));
+        req.session.destroy(() => res.redirect("/"));
     });
 
-};  // END MODULE
+}; // END
+
