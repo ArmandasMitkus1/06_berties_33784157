@@ -1,52 +1,45 @@
 //---------------------------------------------------------
 // REQUIRED MODULES
 //---------------------------------------------------------
-const { check, validationResult } = require('express-validator');
-const bcrypt = require('bcrypt');
+const { check, validationResult } = require("express-validator");
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 module.exports = function (router, shopData) {
 
-//---------------------------------------------------------
-// LOGIN PROTECTION
-//---------------------------------------------------------
     const redirectLogin = (req, res, next) => {
         if (!req.session?.userId) return res.redirect("/login");
         next();
     };
 
-//---------------------------------------------------------
-// SANITISE BOOKS
-//---------------------------------------------------------
     const sanitizeBookData = (req, book) => ({
         id: book.id,
         name: req.sanitize(book.name),
         price: book.price
     });
 
-//---------------------------------------------------------
-// STATIC PAGES
-//---------------------------------------------------------
-    router.get('/', (req, res) => res.render('index', shopData));
-    router.get('/about', (req, res) => res.render('about', shopData));
-    router.get('/search', (req, res) => res.render('search', shopData));
+    //---------------------------------------------------------
+    // BASIC PAGES
+    //---------------------------------------------------------
+    router.get("/", (req, res) => res.render("index", { ...shopData, basePath: "" }));
+    router.get("/about", (req, res) => res.render("about", { ...shopData, basePath: "" }));
+    router.get("/search", (req, res) => res.render("search", { ...shopData, basePath: "" }));
 
+    //---------------------------------------------------------
+    // REGISTER
+    //---------------------------------------------------------
+    router.get("/register", (req, res) => res.render("register", { ...shopData, basePath: "" }));
 
-//---------------------------------------------------------
-// REGISTER
-//---------------------------------------------------------
-    router.get('/register', (req, res) => res.render('register', shopData));
-
-    router.post('/registered',
+    router.post("/registered",
         [
-            check('email').isEmail(),
-            check('username').isLength({ min: 5, max: 20 }),
-            check('password').isLength({ min: 8 })
+            check("email").isEmail(),
+            check("username").isLength({ min: 5, max: 20 }),
+            check("password").isLength({ min: 8 })
         ],
         (req, res) => {
 
             if (!validationResult(req).isEmpty())
-                return res.render('register', shopData);
+                return res.render("register", { ...shopData, basePath: "" });
 
             const first = req.sanitize(req.body.first);
             const last = req.sanitize(req.body.last);
@@ -55,7 +48,7 @@ module.exports = function (router, shopData) {
             const password = req.body.password;
 
             bcrypt.hash(password, saltRounds, (err, hash) => {
-                if (err) return res.send("Error hashing password ❌");
+                if (err) return res.send("❌ Password hashing error");
 
                 const sql = `INSERT INTO users (username, first_name, last_name, email, hashedPassword)
                              VALUES (?, ?, ?, ?, ?)`;
@@ -66,26 +59,26 @@ module.exports = function (router, shopData) {
                     res.send(`
                         <h1>Registration Successful 🎉</h1>
                         <p>Welcome <b>${first} ${last}</b></p>
-                        <a href="/login">Login</a>
+                        <a href="/login">Login Now</a>
                     `);
                 });
             });
-        });
+        }
+    );
 
+    //---------------------------------------------------------
+    // LOGIN
+    //---------------------------------------------------------
+    router.get("/login", (req, res) => res.render("login", { ...shopData, basePath: "" }));
 
-//---------------------------------------------------------
-// LOGIN
-//---------------------------------------------------------
-    router.get('/login', (req, res) => res.render('login', shopData));
-
-    router.post('/loggedin', (req, res) => {
+    router.post("/loggedin", (req, res) => {
         const { username, password } = req.body;
 
         db.query("SELECT * FROM users WHERE username=?", [username], (err, rows) => {
             if (!rows?.length) return res.send("❌ Invalid login");
-            
-            bcrypt.compare(password, rows[0].hashedPassword, (err2, match) => {
-                if (!match) return res.send("❌ Invalid login");
+
+            bcrypt.compare(password, rows[0].hashedPassword, (err2, isMatch) => {
+                if (!isMatch) return res.send("❌ Invalid login");
 
                 req.session.userId = rows[0].username;
                 res.send(`<h1>Welcome ${rows[0].first_name} ✔</h1>`);
@@ -93,13 +86,12 @@ module.exports = function (router, shopData) {
         });
     });
 
-
-//---------------------------------------------------------
-// USERS (PROTECTED)
-//---------------------------------------------------------
-    router.get('/users/list', redirectLogin, (req, res) => {
+    //---------------------------------------------------------
+    // USERS (PROTECTED)
+    //---------------------------------------------------------
+    router.get("/users/list", redirectLogin, (req, res) => {
         db.query("SELECT username, first_name, last_name, email FROM users", (err, rows) => {
-            if (err) return res.send("❌ Could not fetch users");
+            if (err) return res.send("❌ Error fetching users");
 
             res.render("users_list", {
                 users: rows.map(u => ({
@@ -108,56 +100,59 @@ module.exports = function (router, shopData) {
                     last_name: req.sanitize(u.last_name),
                     email: req.sanitize(u.email)
                 })),
+                basePath: "",
                 shopName: shopData.shopName
             });
         });
     });
 
-
-//---------------------------------------------------------
-// BOOKS (FULLY FIXED)
-//---------------------------------------------------------
-    router.get('/books', (req, res) => {
+    //---------------------------------------------------------
+    // BOOKS (ALL FIXED HERE)
+    //---------------------------------------------------------
+    router.get("/books", (req, res) => {
         db.query("SELECT id, name, price FROM books", (err, rows) => {
-            if (err) return res.send("❌ Book fetch error");
-            res.render("books_list", {        // << FIXED NAME
+            if (err) return res.send("❌ Failed to load books");
+
+            res.render("books_list", {
                 books: rows.map(b => sanitizeBookData(req, b)),
-                shopName: shopData.shopName
+                shopName: shopData.shopName,
+                basePath: ""       // 🔥 necessary fix
             });
         });
     });
 
-    router.get('/books/:id', (req, res) => {
-        db.query("SELECT id, name, price FROM books WHERE id=?", [req.params.id], (err, rows) => {
+    router.get("/books/:id", (req, res) => {
+        db.query("SELECT * FROM books WHERE id=?", [req.params.id], (err, rows) => {
             if (!rows?.length) return res.send("📕 Book not found");
-            res.render("book_detail", {       // this one was correct already
+
+            res.render("book_detail", {
                 book: sanitizeBookData(req, rows[0]),
-                shopName: shopData.shopName
+                shopName: shopData.shopName,
+                basePath: ""       // 🔥 fix added here too
             });
         });
     });
 
-
-//---------------------------------------------------------
-// SEARCH
-//---------------------------------------------------------
-    router.get('/search-result', (req, res) => {
+    //---------------------------------------------------------
+    // SEARCH RESULTS
+    //---------------------------------------------------------
+    router.get("/search-result", (req, res) => {
         db.query("SELECT * FROM books WHERE name LIKE ?", [`%${req.query.keyword}%`], (err, rows) => {
+
             res.render("search-results", {
                 results: rows.map(b => sanitizeBookData(req, b)),
                 keyword: req.query.keyword,
-                shopName: shopData.shopName
+                shopName: shopData.shopName,
+                basePath: ""       // 🔥 fix added here as well
             });
         });
     });
 
-
-//---------------------------------------------------------
-// LOGOUT
-//---------------------------------------------------------
-    router.get('/logout', redirectLogin, (req, res) => {
+    //---------------------------------------------------------
+    // LOGOUT
+    //---------------------------------------------------------
+    router.get("/logout", redirectLogin, (req, res) => {
         req.session.destroy(() => res.redirect("/"));
     });
 
-}; // END
-
+};  // END
