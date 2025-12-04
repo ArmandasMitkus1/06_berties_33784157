@@ -1,39 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>User List – <%= shopName %></title>
-    <link rel="stylesheet" type="text/css" href="/main.css" />
+  <title>User List – <%= shopName %></title>
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
 </head>
-<body>
 
+<body>
 <h1>Registered Users – <%= shopName %></h1>
 
 <p>
-    <a href="/">🏠 Home</a> |
-    <a href="/register">📝 Register</a> |
-    <a href="/books">📚 Books</a> |
-    <a href="/logout">🚪 Logout</a>
+  <a href="<%= basePath %>/">🏠 Home</a> |
+  <a href="<%= basePath %>/register">📝 Register</a> |
+  <a href="<%= basePath %>/books">📚 Books</a> |
+  <a href="<%= basePath %>/logout">🚪 Logout</a>
 </p>
 
+<hr>
+
 <% if (users.length === 0) { %>
-    <p>No users registered yet.</p>
+
+<p>No users registered.</p>
+
 <% } else { %>
 <table border="1" cellpadding="6">
-    <tr>
-        <th>Username</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Email</th>
-    </tr>
+  <tr>
+    <th>Username</th>
+    <th>First</th>
+    <th>Last</th>
+    <th>Email</th>
+  </tr>
 
-    <% users.forEach(user => { %>
-        <tr>
-            <td><%= user.username %></td>
-            <td><%= user.first_name %></td>
-            <td><%= user.last_name %></td>
-            <td><%= user.email %></td>
-        </tr>
-    <% }) %>
+  <% users.forEach(u => { %>
+  <tr>
+    <td><%= u.username %></td>
+    <td><%= u.first_name %></td>
+    <td><%= u.last_name %></td>
+    <td><%= u.email %></td>
+  </tr>
+  <% }) %>
+
 </table>
 <% } %>
 

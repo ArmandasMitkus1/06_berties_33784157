@@ -12,17 +12,14 @@
   <table border="1" cellpadding="6">
     <tr><th>ID</th><td><%= book.id %></td></tr>
     <tr><th>Title</th><td><%= book.name %></td></tr>
-    <tr><th>Price (£)</th><td>£<%= Number(book.price).toFixed(2) %></td></tr>
+    <tr><th>Price</th><td>£<%= Number(book.price).toFixed(2) %></td></tr>
   </table>
 
-  <!-- ADD TO CART BUTTON 🔥 -->
   <p style="margin-top:12px;">
     <a href="<%= basePath %>/cart/add/<%= book.id %>" class="btn">🛒 Add to Cart</a>
   </p>
 
-  <hr>
-
-  <p>
+  <p style="margin-top:10px;">
     <a href="<%= basePath %>/books">⬅ Back to Books</a> |
     <a href="<%= basePath %>/cart">🛒 View Cart</a> |
     <a href="<%= basePath %>/">🏠 Home</a> |
