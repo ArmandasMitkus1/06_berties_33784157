@@ -1,8 +1,33 @@
+const axios = require("axios");
+require('dotenv').config();
+
 module.exports = (router, shopData) => {
-    router.get("/api/books", (req, res) => {
-        db.query("SELECT id, name, price FROM books", (err, rows) => {
-            if (err) return res.status(500).json({ error: "Database error" });
-            res.json(rows);
-        });
-    });
+
+  router.get("/weather", (req, res) => {
+    res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null });
+  });
+
+  router.post("/weather", async (req, res) => {
+    try {
+      const city = req.body.city || "London";
+      const apiKey = process.env.OWM_API_KEY;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+
+      const response = await axios.get(url);
+      const data = response.data;
+
+      const weather = {
+        city: data.name,
+        temp: data.main.temp,
+        humidity: data.main.humidity,
+        description: data.weather[0].description
+      };
+
+      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather });
+
+    } catch (err) {
+      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null });
+    }
+  });
+
 };

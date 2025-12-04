@@ -1,10 +1,12 @@
 //-----------------------------------------------------
 // IMPORTS
 //-----------------------------------------------------
-const express = require("express");
-const bodyParser = require("body-parser");
-const session = require("express-session"); 
-const expressSanitizer = require("express-sanitizer");
+const express = require('express');
+const ejs = require('ejs');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+const session = require('express-session'); 
+const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 //-----------------------------------------------------
@@ -14,9 +16,8 @@ const app = express();
 const port = 8000;
 
 //-----------------------------------------------------
-// DATABASE POOL
+// DATABASE
 //-----------------------------------------------------
-const mysql = require("mysql2");
 const db = mysql.createPool({
   host: process.env.BB_HOST || "localhost",
   user: process.env.BB_USER,
@@ -26,11 +27,11 @@ const db = mysql.createPool({
 global.db = db;
 
 //-----------------------------------------------------
-// SHOP CONFIG
+// SHOP SETTINGS
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "" // root path
+  basePath: "" // running at root
 };
 
 //-----------------------------------------------------
@@ -40,7 +41,7 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 600000 } // 10 min
+  cookie: { maxAge: 600000 } // 10min session
 }));
 
 app.use(expressSanitizer());
@@ -56,16 +57,15 @@ app.set("view engine", "ejs");
 //-----------------------------------------------------
 // ROUTES
 //-----------------------------------------------------
-const Router = require("express").Router;
-const router = Router();
+const router = require("express").Router();
 
-// Shop & auth routes
+// Main routes
 require("./routes/main")(router, shopData);
 
-// Weather routes
-require("./routes/weather")(router, shopData);
+// Cart routes
+require("./routes/cart")(router, shopData);
 
-// API routes (Lab 9b)
+// Weather API route
 require("./routes/api")(router, shopData);
 
 app.use("/", router);
