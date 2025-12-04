@@ -2,7 +2,7 @@
 <html>
 <head>
   <title><%= shopName %> — <%= book.name %></title>
-  <link rel="stylesheet" href="/main.css">
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
 </head>
 
 <body>
@@ -16,18 +16,17 @@
   </table>
 
   <!-- ADD TO CART BUTTON 🔥 -->
-  <form action="/cart/add" method="POST" style="margin-top:10px;">
-    <input type="hidden" name="id" value="<%= book.id %>">
-    <button type="submit">Add to Cart 🛒</button>
-  </form>
+  <p style="margin-top:12px;">
+    <a href="<%= basePath %>/cart/add/<%= book.id %>" class="btn">🛒 Add to Cart</a>
+  </p>
 
-  <br>
+  <hr>
 
   <p>
-    <a href="<%= basePath %>/books">⬅ Back to all books</a> |
+    <a href="<%= basePath %>/books">⬅ Back to Books</a> |
     <a href="<%= basePath %>/cart">🛒 View Cart</a> |
     <a href="<%= basePath %>/">🏠 Home</a> |
-    <a href="<%= basePath %>/users/list">👤 User List</a> |
+    <a href="<%= basePath %>/users/list">👤 Users</a> |
     <a href="<%= basePath %>/logout">🚪 Logout</a>
   </p>
 
