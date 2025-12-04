@@ -2,22 +2,34 @@
 <html>
 <head>
   <title><%= shopName %> — <%= book.name %></title>
-  <link rel="stylesheet" href="main.css"> 
+  <link rel="stylesheet" href="/main.css">
 </head>
+
 <body>
-  <h1><%= book.name %></h1>
+
+  <h1><%= book.name %> 📘</h1>
 
   <table border="1" cellpadding="6">
     <tr><th>ID</th><td><%= book.id %></td></tr>
     <tr><th>Title</th><td><%= book.name %></td></tr>
-    <tr><th>Price (£)</th><td><%= book.price %></td></tr>
+    <tr><th>Price (£)</th><td>£<%= Number(book.price).toFixed(2) %></td></tr>
   </table>
 
+  <!-- ADD TO CART BUTTON 🔥 -->
+  <form action="/cart/add" method="POST" style="margin-top:10px;">
+    <input type="hidden" name="id" value="<%= book.id %>">
+    <button type="submit">Add to Cart 🛒</button>
+  </form>
+
+  <br>
+
   <p>
-    <a href="<%= basePath %>/books">⬅ Back to all books</a> | 
-    <a href="<%= basePath %>/">🏠 Back to Home</a> | 
-    <a href="<%= basePath %>/users/list">User List</a> | 
-    <a href="<%= basePath %>/logout">Logout</a>
+    <a href="<%= basePath %>/books">⬅ Back to all books</a> |
+    <a href="<%= basePath %>/cart">🛒 View Cart</a> |
+    <a href="<%= basePath %>/">🏠 Home</a> |
+    <a href="<%= basePath %>/users/list">👤 User List</a> |
+    <a href="<%= basePath %>/logout">🚪 Logout</a>
   </p>
+
 </body>
 </html>
