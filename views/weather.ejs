@@ -2,19 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Weather</title>
+    <title>Current Weather - <%= shopName %></title>
+    <link rel="stylesheet" href="<%= basePath %>/main.css">
 </head>
 <body>
-    <h1>Current Weather</h1>
-    <hr>
+    <header>
+        <h1>Current Weather</h1>
+    </header>
 
-    <% if (weather) { %>
-        <h2>📍 <%= weather.city %></h2>
-        <p>🌡️ Temperature: <%= weather.temp %>°C</p>
-        <p>💧 Humidity: <%= weather.humidity %>%</p>
-        <p>📝 Description: <%= weather.description %></p>
-    <% } else { %>
-        <p>Weather data is currently unavailable. Please try again later.</p>
-    <% } %>
+    <!-- City Search Form -->
+    <section>
+        <form action="/weather" method="GET">
+            <input type="text" name="city" placeholder="Enter city name" required>
+            <button type="submit">Get Weather</button>
+        </form>
+    </section>
+
+    <!-- Weather Display -->
+    <section>
+        <% if (weather) { %>
+            <h2>📍 <%= weather.city %></h2>
+            <p>🌡 Temperature: <%= weather.temp %>°C</p>
+            <p>💧 Humidity: <%= weather.humidity %>%</p>
+            <p>📝 Description: <%= weather.description %></p>
+            <% if (weather.icon) { %>
+                <img src="http://openweathermap.org/img/wn/<%= weather.icon %>@2x.png" alt="Weather icon">
+            <% } %>
+        <% } else { %>
+            <p>Weather data is currently unavailable. Please check the city name or try again later.</p>
+        <% } %>
+    </section>
+
 </body>
 </html>
