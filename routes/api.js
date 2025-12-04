@@ -2,20 +2,18 @@ const axios = require("axios");
 
 module.exports = (router, shopData) => {
 
-  // GET weather page with search form
+  // GET /weather page
   router.get("/weather", (req, res) => {
-    res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, result: null });
+    res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null, error: null });
   });
 
-  // POST weather search
+  // POST /weather search
   router.post("/weather", async (req, res) => {
+    const city = req.body.city;
+    const apiKey = process.env.OWM_API_KEY;
+
     try {
-      const city = req.body.city;
-      const apiKey = process.env.OWM_API_KEY;
-
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
-
-      const response = await axios.get(url);
+      const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
       const data = response.data;
 
       const weather = {
@@ -25,11 +23,11 @@ module.exports = (router, shopData) => {
         description: data.weather[0].description
       };
 
-      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, result: weather });
+      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather, error: null });
 
-    } catch (error) {
-      console.error("Weather API error:", error.message);
-      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, result: null, error: "City not found" });
+    } catch (err) {
+      console.error("Weather API error:", err.message);
+      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null, error: "City not found" });
     }
   });
 

@@ -5,11 +5,13 @@
   <button type="submit">Search</button>
 </form>
 
-<% if (result) { %>
-  <h2>Weather in <%= result.city %></h2>
-  <p>Temperature: <%= result.temp %>°C</p>
-  <p>Humidity: <%= result.humidity %>%</p>
-  <p>Condition: <%= result.description %></p>
-<% } else if (error) { %>
+<% if (error) { %>
   <p style="color:red;"><%= error %></p>
+<% } %>
+
+<% if (weather) { %>
+  <h2>📍 <%= weather.city %></h2>
+  <p>🌡️ Temperature: <%= weather.temp %>°C</p>
+  <p>💧 Humidity: <%= weather.humidity %>%</p>
+  <p>📝 Description: <%= weather.description %></p>
 <% } %>

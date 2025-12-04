@@ -1,14 +1,27 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const session = require("express-session");
-const expressSanitizer = require("express-sanitizer");
-require("dotenv").config();
+//-----------------------------------------------------
+// IMPORTS
+//-----------------------------------------------------
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session'); 
+const expressSanitizer = require('express-sanitizer');
+require('dotenv').config();
 
+//-----------------------------------------------------
+// INITIALISE SERVER
+//-----------------------------------------------------
 const app = express();
 const port = 8000;
 
-// Database pool setup
-const mysql = require("mysql2");
+//-----------------------------------------------------
+// VIEW ENGINE
+//-----------------------------------------------------
+app.set('view engine', 'ejs');
+
+//-----------------------------------------------------
+// DATABASE (if needed later)
+//-----------------------------------------------------
+const mysql = require('mysql2');
 const db = mysql.createPool({
   host: process.env.BB_HOST,
   user: process.env.BB_USER,
@@ -17,13 +30,17 @@ const db = mysql.createPool({
 });
 global.db = db;
 
-// Shop data
+//-----------------------------------------------------
+// SHOP SETTINGS
+//-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
   basePath: ""
 };
 
-// Middleware
+//-----------------------------------------------------
+// MIDDLEWARE
+//-----------------------------------------------------
 app.use(session({
   secret: "somerandomstuff",
   resave: false,
@@ -34,22 +51,16 @@ app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
 
-// View engine
-app.set("views", __dirname + "/views");
-app.set("view engine", "ejs");
-
-// Mount routes
+//-----------------------------------------------------
+// ROUTES
+//-----------------------------------------------------
 const router = require("express").Router();
-
-// Main pages (login/register/books/cart/etc)
-require("./routes/main")(router, shopData);
-
-// API routes
 require("./routes/api")(router, shopData);
-
 app.use("/", router);
 
-// Start server
+//-----------------------------------------------------
+// START SERVER
+//-----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server running at http://localhost:${port}/`);
+  console.log(`🔥 Server live on port ${port}`);
 });
