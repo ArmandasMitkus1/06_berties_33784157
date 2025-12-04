@@ -65,13 +65,11 @@ const router = require("./routes/main");
 // mount all pages under '/usr/428'
 app.use(shopData.basePath, router);
 
-// FIX — removed redirect loop
+// -----------------------------------------------------
+// HOMEPAGE FIX — now redirects without loop
+// -----------------------------------------------------
 app.get("/", (req, res) => {
-  res.send(`
-    <h1>Server Online ✔</h1>
-    <p>Your site is located here:</p>
-    <a href="${shopData.basePath}/">${shopData.basePath}/</a>
-  `);
+  res.redirect(shopData.basePath + "/");
 });
 
 // -----------------------------------------------------
