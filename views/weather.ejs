@@ -1,15 +1,28 @@
-<h1>🌤 Weather</h1>
-<hr>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather – <%= shopName %></title>
+  <link rel="stylesheet" href="/main.css">
+</head>
+<body>
 
-<% if (weather) { %>
-  <h2>📍 <%= weather.city %></h2>
-  <p>🌡 Temperature: <%= weather.temp %>°C</p>
-  <p>💧 Humidity: <%= weather.humidity %>%</p>
-<% } else { %>
-  <p>No weather data available.</p>
-<% } %>
+<h1>🌤 Weather at <%= weather.city %></h1>
 
 <p>
-  <a href="<%= basePath %>/">🏠 Home</a> |
-  <a href="<%= basePath %>/books">📚 Books</a>
+  <a href="/">🏠 Home</a> | 
+  <a href="/books">📚 Books</a> | 
+  <a href="/users/list">👤 Users</a> | 
+  <a href="/cart">🛒 Cart</a> | 
+  <a href="/logout">🚪 Logout</a>
 </p>
+
+<hr>
+
+<p>
+  Temperature: <b><%= weather.temp %>°C</b><br>
+  Condition: <b><%= weather.desc %></b><br>
+  <img src="<%= weather.icon %>" alt="Weather icon">
+</p>
+
+</body>
+</html>

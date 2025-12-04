@@ -2,14 +2,15 @@
 // IMPORTS
 //-----------------------------------------------------
 const express = require('express');
+const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
-const session = require('express-session');
+const session = require('express-session'); 
 const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 //-----------------------------------------------------
-// INITIALISE SERVER
+// INITIALISE APP
 //-----------------------------------------------------
 const app = express();
 const port = 8000;
@@ -30,7 +31,7 @@ global.db = db;
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "" // root path
+  basePath: ""
 };
 
 //-----------------------------------------------------
@@ -40,9 +41,8 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 600000 } // 10 minutes
+  cookie: { maxAge: 1000 * 60 * 10 } // 10 min
 }));
-
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
@@ -58,20 +58,21 @@ app.set("view engine", "ejs");
 //-----------------------------------------------------
 const router = require("express").Router();
 
-// main app routes
+// Core routes
 require("./routes/main")(router, shopData);
 
-// API / weather route
-require("./routes/api")(router, shopData);
-
-// cart route if you have it
+// Cart routes (Lab 9)
 require("./routes/cart")(router, shopData);
 
+// Weather API route (Lab 9)
+require("./routes/api")(router, shopData);
+
+// Mount router
 app.use("/", router);
 
 //-----------------------------------------------------
 // START SERVER
 //-----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server live on http://localhost:${port}/`);
+  console.log(`🔥 Server running at http://localhost:${port}/`);
 });
