@@ -1,39 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Weather – <%= shopName %></title>
-    <link rel="stylesheet" href="<%= basePath %>/main.css">
-</head>
-<body>
-    <h1>🌤 Weather – <%= shopName %></h1>
+<h1>Current Weather</h1>
 
-    <p>
-        <a href="<%= basePath %>/">🏠 Home</a> |
-        <a href="<%= basePath %>/books">📚 Books</a> |
-        <a href="<%= basePath %>/users/list">👤 Users</a> |
-        <a href="<%= basePath %>/logout">🚪 Logout</a>
-    </p>
+<form action="/weather" method="POST">
+    <label for="city">Enter city:</label>
+    <input type="text" id="city" name="city" required>
+    <button type="submit">Get Weather</button>
+</form>
 
-    <hr>
+<hr>
 
-    <form action="<%= basePath %>/weather" method="POST">
-        <input type="text" name="city" placeholder="Enter city" required>
-        <button type="submit">Check Weather</button>
-    </form>
-
-    <hr>
-
-    <% if (weather) { %>
-        <h2>Weather in <%= weather.city %>:</h2>
-        <ul>
-            <li>Temperature: <%= weather.temp %>°C</li>
-            <li>Humidity: <%= weather.humidity %>%</li>
-            <li>Condition: <%= weather.description %></li>
-        </ul>
-    <% } else if (error) { %>
-        <p style="color:red;"><%= error %></p>
-    <% } else { %>
-        <p>Enter a city and click "Check Weather" to see the current conditions.</p>
-    <% } %>
-</body>
-</html>
+<% if (weather) { %>
+    <h2>📍 <%= weather.city %></h2>
+    <p>🌡️ Temperature: <%= weather.temp %>°C</p>
+    <p>💧 Humidity: <%= weather.humidity %>%</p>
+    <p>📝 Description: <%= weather.description %></p>
+<% } else { %>
+    <p>Weather data is currently unavailable. Please try again later.</p>
+<% } %>

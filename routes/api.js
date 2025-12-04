@@ -1,27 +1,21 @@
-const express = require("express");
 const axios = require("axios");
-require('dotenv').config();
+require("dotenv").config();
 
 module.exports = (router, shopData) => {
 
-    // GET request — show the weather page initially
+    // GET default weather page
     router.get("/weather", (req, res) => {
-        res.render("weather", { 
-            shopName: shopData.shopName, 
-            basePath: shopData.basePath,
-            weather: null
-        });
+        res.render("weather", { weather: null, shopName: shopData.shopName, basePath: shopData.basePath });
     });
 
-    // POST request — fetch weather for city entered by user
+    // POST city input
     router.post("/weather", async (req, res) => {
-        const city = req.body.city || "London";  // default if no input
-        const apiKey = process.env.OWM_API_KEY;
-
         try {
-            const response = await axios.get(
-                `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
-            );
+            const city = req.body.city;
+            const apiKey = process.env.OWM_API_KEY;
+
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+            const response = await axios.get(url);
             const data = response.data;
 
             const weather = {
@@ -31,21 +25,11 @@ module.exports = (router, shopData) => {
                 description: data.weather[0].description
             };
 
-            res.render("weather", { 
-                shopName: shopData.shopName, 
-                basePath: shopData.basePath,
-                weather
-            });
+            res.render("weather", { weather, shopName: shopData.shopName, basePath: shopData.basePath });
 
         } catch (error) {
             console.error("Error fetching weather:", error.message);
-            res.render("weather", { 
-                shopName: shopData.shopName, 
-                basePath: shopData.basePath,
-                weather: null,
-                error: "City not found or API error"
-            });
+            res.render("weather", { weather: null, shopName: shopData.shopName, basePath: shopData.basePath });
         }
     });
-
 };
