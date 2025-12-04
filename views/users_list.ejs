@@ -1,43 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Users – <%= shopName %></title>
-<link rel="stylesheet" href="<%= basePath %>/main.css">
-</head>
-
-<body>
-
-<h1>Registered Users – <%= shopName %></h1>
+<h1>Users — <%= shopName %></h1>
 
 <p>
-<a href="<%= basePath %>/">🏠 Home</a> |
-<a href="<%= basePath %>/books">📚 Books</a> |
-<a href="<%= basePath %>/logout">🚪 Logout</a>
+    <a href="<%= basePath %>/">Home</a> |
+    <a href="<%= basePath %>/books">Books</a> |
+    <a href="<%= basePath %>/cart">Cart</a> |
+    <a href="<%= basePath %>/logout">Logout</a>
 </p>
-
 <hr>
 
-<% if (!users.length) { %>
-
-<p>No users registered yet.</p>
-
-<% } else { %>
-
 <table border="1" cellpadding="6">
-<tr><th>Username</th><th>First</th><th>Last</th><th>Email</th></tr>
-
+<tr><th>User</th><th>First</th><th>Last</th><th>Email</th></tr>
 <% users.forEach(u => { %>
 <tr>
-  <td><%= u.username %></td>
-  <td><%= u.first_name %></td>
-  <td><%= u.last_name %></td>
-  <td><%= u.email %></td>
+<td><%= u.username %></td><td><%= u.first_name %></td><td><%= u.last_name %></td><td><%= u.email %></td>
 </tr>
 <% }) %>
-
 </table>
-
-<% } %>
-
-</body>
-</html>

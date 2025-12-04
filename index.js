@@ -10,7 +10,7 @@ const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 //-----------------------------------------------------
-// INITIALISE
+// APP
 //-----------------------------------------------------
 const app = express();
 const port = 8000;
@@ -27,11 +27,11 @@ const db = mysql.createPool({
 global.db = db;
 
 //-----------------------------------------------------
-// SHOP CONFIG
+// REQUIRED FOR DOC.GOLD SERVER ❗
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: ""       // ⬅ correct for doc.gold.ac.uk/usr/428/
+  basePath: "/usr/428"   // <── FIX THAT MAKES LINKS WORK
 };
 
 //-----------------------------------------------------
@@ -41,24 +41,16 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 10 } // 10 min session
+  cookie: { maxAge: 1000 * 60 * 10 }
 }));
 
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + "/public"));  // CSS + images
+
+app.use(express.static(__dirname + "/public"));
 
 //-----------------------------------------------------
-// 🔥 MAKE basePath + shopName AVAILABLE IN ALL EJS FILES
-//-----------------------------------------------------
-app.use((req, res, next) => {
-  res.locals.basePath = shopData.basePath;
-  res.locals.shopName = shopData.shopName;
-  next();
-});
-
-//-----------------------------------------------------
-// VIEW ENGINE
+// VIEWS
 //-----------------------------------------------------
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
@@ -69,14 +61,14 @@ app.set("view engine", "ejs");
 const Router = require("express").Router;
 const router = Router();
 
-require("./routes/main")(router, shopData); // login/register/books/users
-require("./routes/cart")(router, shopData); // 🛒 LAB 9 Shopping cart
+require("./routes/main")(router, shopData);
+require("./routes/cart")(router, shopData); // LAB 9
 
-app.use("/", router);
+app.use(shopData.basePath, router); // <── MOUNTED CORRECTLY
 
 //-----------------------------------------------------
-// START SERVER
+// SERVER
 //-----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server running at http://localhost:${port}/`);
+  console.log(`🔥 Running at http://localhost:${port}${shopData.basePath}`);
 });
