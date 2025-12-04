@@ -27,7 +27,7 @@ const db = mysql.createPool({
 global.db = db;
 
 // -----------------------------------------------------
-// SHOP CONFIG (DO NOT CHANGE FOR SERVER WORKING)
+// SHOP CONFIG (DO NOT CHANGE FOR SERVER DEPLOYMENT)
 // -----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
@@ -47,7 +47,7 @@ app.use(session({
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// serve static files
+// Serve static files under basePath
 app.use(shopData.basePath, express.static(__dirname + "/public"));
 
 // -----------------------------------------------------
@@ -58,21 +58,25 @@ app.set("view engine", "ejs");
 app.engine("html", ejs.renderFile);
 
 // -----------------------------------------------------
-// ROUTES  **FIXED — THIS IS THE CORRECT VERSION**
+// ROUTES  (STABLE + CORRECT)
 // -----------------------------------------------------
-const router = require("./routes/main");   // import router directly
+const router = require("./routes/main");
 
-// mount router under basePath
+// mount all pages under '/usr/428'
 app.use(shopData.basePath, router);
 
-// redirect base domain so site loads properly
+// FIX — removed redirect loop
 app.get("/", (req, res) => {
-  res.redirect(shopData.basePath + "/");
+  res.send(`
+    <h1>Server Online ✔</h1>
+    <p>Your site is located here:</p>
+    <a href="${shopData.basePath}/">${shopData.basePath}/</a>
+  `);
 });
 
 // -----------------------------------------------------
 // START SERVER
 // -----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server running on http://localhost:${port}${shopData.basePath}`);
+  console.log(`🔥 Server running: http://localhost:${port}${shopData.basePath}`);
 });
