@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Cart – <%= shopName %></title>
+    <link rel="stylesheet" href="/main.css">
+</head>
+
+<body>
+    <h1>🛒 Your Cart – <%= shopName %></h1>
+
+    <p>
+        <a href="/">🏠 Home</a> |
+        <a href="/books">📚 Books</a> |
+        <a href="/users/list">Users</a> |
+        <a href="/logout">Logout</a>
+    </p>
+
+    <hr>
+
+    <% if (!cart || cart.length === 0) { %>
+
+        <h2>Your cart is empty.</h2>
+        <p><a href="/books">Browse books</a> to add some! 📘</p>
+
+    <% } else { %>
+
+        <table border="1" cellpadding="6" cellspacing="0">
+            <tr>
+                <th>Book ID</th>
+                <th>Action</th>
+            </tr>
+
+            <% cart.forEach(id => { %>
+                <tr>
+                    <td><%= id %></td>
+                    <td><a href="/cart/remove/<%= id %>">❌ Remove</a></td>
+                </tr>
+            <
