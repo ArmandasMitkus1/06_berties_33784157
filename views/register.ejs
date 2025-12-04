@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Register for <%= shopName %></title>
-    <link rel="stylesheet" type="text/css" href="main.css" />
+    <link rel="stylesheet" type="text/css" href="<%= basePath %>/main.css" />
   </head>
   <body>
     <h1>Register for <%= shopName %></h1>
@@ -32,6 +32,9 @@
       <input type="submit" value="Register" />
     </form>
 
-    <p><a href="<%= basePath %>/">⬅ Back to Home</a> | <a href="<%= basePath %>/logout">Logout</a></p>
+    <p>
+      <a href="<%= basePath %>/">⬅ Back to Home</a>
+      <% if (user) { %> | <a href="<%= basePath %>/logout">Logout</a><% } %>
+    </p>
   </body>
 </html>

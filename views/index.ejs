@@ -12,8 +12,12 @@
     <a href="<%= basePath %>/users/list">Users</a> |
     <a href="<%= basePath %>/cart">Cart</a> |
     <a href="<%= basePath %>/weather">Weather</a> |
-    <a href="<%= basePath %>/login">Login</a> |
-    <a href="<%= basePath %>/register">Register</a>
+    <% if (!user) { %>
+      <a href="<%= basePath %>/login">Login</a> |
+      <a href="<%= basePath %>/register">Register</a>
+    <% } else { %>
+      <a href="<%= basePath %>/logout">Logout</a>
+    <% } %>
   </p>
 </body>
 </html>

@@ -14,7 +14,10 @@
   </table>
 
   <p style="margin-top:12px;">
-    <a href="<%= basePath %>/cart/add/<%= book.id %>">🛒 Add to Cart</a>
+    <form action="<%= basePath %>/cart/add" method="POST" style="display:inline;">
+      <input type="hidden" name="id" value="<%= book.id %>">
+      <button type="submit">🛒 Add to Cart</button>
+    </form>
   </p>
 
   <hr>

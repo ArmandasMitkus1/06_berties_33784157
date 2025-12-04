@@ -1,14 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>About <%=shopName%></title>
-    <link rel="stylesheet"  type="text/css" href="main.css" />
-  </head>
-  <body>
-    <h1>About <%=shopName%></h1>
-    
-    <p><a href="<%= basePath %>/">🏠 Home</a> | <a href="<%= basePath %>/users/list">User List</a> | <a href="<%= basePath %>/logout">Logout</a></p>
-    
+<head>
+    <title>About <%= shopName %></title>
+    <link rel="stylesheet" type="text/css" href="<%= basePath %>/main.css" />
+</head>
+<body>
+    <h1>About <%= shopName %></h1>
+
+    <p>
+        <a href="<%= basePath %>/">🏠 Home</a> | 
+        <a href="<%= basePath %>/users/list">👤 User List</a> | 
+        <a href="<%= basePath %>/logout">🚪 Logout</a>
+    </p>
+
     <p>We sell all sorts of books and nothing else!</p>
-  </body>
+</body>
 </html>

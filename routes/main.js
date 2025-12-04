@@ -4,7 +4,6 @@ const saltRounds = 10;
 
 module.exports = function(router, shopData) {
 
-  // Login protection
   const redirectLogin = (req, res, next) => {
     if (!req.session?.userId) return res.redirect("/login");
     next();
@@ -111,5 +110,4 @@ module.exports = function(router, shopData) {
   router.get('/logout', redirectLogin, (req, res) => {
     req.session.destroy(() => res.redirect("/login"));
   });
-
 };

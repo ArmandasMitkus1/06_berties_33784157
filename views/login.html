@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-  <title>Login – Bertie’s Books</title>
-  <link rel="stylesheet" href="main.css">
+  <title>Login – <%= shopName %></title>
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
 </head>
 <body>
   <h1>Login</h1>
@@ -11,6 +11,9 @@
     <p>Password: <input type="password" name="password" required></p>
     <p><input type="submit" value="Login"></p>
   </form>
-  <p><a href="<%= basePath %>/">⬅ Back to Home</a> | <a href="<%= basePath %>/logout">Logout</a></p>
+  <p>
+    <a href="<%= basePath %>/">⬅ Back to Home</a>
+    <% if (user) { %> | <a href="<%= basePath %>/logout">Logout</a><% } %>
+  </p>
 </body>
 </html>

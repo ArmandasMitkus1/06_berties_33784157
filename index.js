@@ -41,7 +41,7 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 600000 } // 10 min
+  cookie: { maxAge: 1000 * 60 * 10 } // 10 minutes
 }));
 
 app.use(expressSanitizer());
@@ -53,23 +53,25 @@ app.use(express.static(__dirname + "/public"));
 //-----------------------------------------------------
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
+app.engine("html", ejs.renderFile);
 
 //-----------------------------------------------------
 // ROUTES
 //-----------------------------------------------------
 const router = require("express").Router();
 
-// Main routes: register/login/books/users
+// Main app routes
 require("./routes/main")(router, shopData);
 
 // Cart routes
 require("./routes/cart")(router, shopData);
 
-// Weather API route
-require("./routes/api")(router, shopData);
+// Weather API routes
+require("./routes/weather")(router, shopData);
 
-// Book API
+// API JSON endpoints
 require("./routes/api_books")(router);
+require("./routes/api_users")(router);
 
 app.use("/", router);
 

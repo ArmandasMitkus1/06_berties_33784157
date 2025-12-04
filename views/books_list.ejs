@@ -22,7 +22,10 @@
         <li>
           <a href="<%= basePath %>/books/<%= book.id %>"><%= book.name %></a>
           — £<%= Number(book.price).toFixed(2) %>
-          <a href="<%= basePath %>/cart/add/<%= book.id %>" style="margin-left:10px;">🛒 Add to Cart</a>
+          <form action="<%= basePath %>/cart/add" method="POST" style="display:inline; margin-left:10px;">
+            <input type="hidden" name="id" value="<%= book.id %>">
+            <button type="submit">🛒 Add to Cart</button>
+          </form>
         </li>
       <% }) %>
     </ul>

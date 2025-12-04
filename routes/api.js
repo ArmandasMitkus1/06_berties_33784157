@@ -6,7 +6,9 @@ module.exports = (router, shopData) => {
     try {
       const city = req.query.city || "London";
       const apiKey = process.env.OWM_API_KEY;
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+      if (!apiKey) throw new Error("OWM_API_KEY not set in .env");
+
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`;
 
       const response = await axios.get(url);
       const data = response.data;
@@ -21,8 +23,8 @@ module.exports = (router, shopData) => {
       res.render("weather", { weather, shopName: shopData.shopName, basePath: shopData.basePath });
 
     } catch (err) {
-      console.error(err);
-      res.render("weather", { weather: null, shopName: shopData.shopName, basePath: shopData.basePath });
+      console.error("Weather API error:", err.message);
+      res.render("weather", { weather: null, shopName: shopData.shopName, basePath: shopData.basePath, error: "City not found or API error" });
     }
   });
 };
