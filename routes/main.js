@@ -1,71 +1,30 @@
-//---------------------------------------------------------
-// REQUIRED MODULES
-//---------------------------------------------------------
-const { check, validationResult } = require('express-validator');
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
+module.exports = (router, shopData) => {
 
-module.exports = function (router, shopData) {
-
-    //---------------------------------------------------------
-    // LOGIN PROTECTION
-    //---------------------------------------------------------
-    const redirectLogin = (req, res, next) => {
-        if (!req.session?.userId) return res.redirect("/login");
-        next();
-    };
-
-    //---------------------------------------------------------
-    // ROUTES — ALL RENDER .EJS CORRECTLY
-    //---------------------------------------------------------
-
-    router.get("/", (req,res) => {
-        res.render("index.ejs", shopData);
+    // Home page
+    router.get("/", (req, res) => {
+      res.render("index", { shopName: shopData.shopName, basePath: shopData.basePath });
     });
-
-    router.get("/about", (req,res) => {
-        res.render("about.ejs", shopData);
+  
+    // Books list
+    router.get("/books", (req, res) => {
+      db.query("SELECT * FROM books", (err, results) => {
+        if (err) throw err;
+        res.render("books_list", { books: results, shopName: shopData.shopName, basePath: shopData.basePath });
+      });
     });
-
-    router.get("/search", (req,res) => {
-        res.render("search.ejs", shopData);
+  
+    // Book detail
+    router.get("/books/:id", (req, res) => {
+      const bookId = req.params.id;
+      db.query("SELECT * FROM books WHERE id = ?", [bookId], (err, results) => {
+        if (err) throw err;
+        if (results.length > 0) {
+          res.render("book_detail", { book: results[0], shopName: shopData.shopName, basePath: shopData.basePath });
+        } else {
+          res.send("Book not found");
+        }
+      });
     });
-
-    router.get("/register", (req,res) => {
-        res.render("register.ejs", shopData);
-    });
-
-    router.get("/login", (req,res) => {
-        res.render("login.ejs", shopData);
-    });
-
-
-    //---------------------------------------------------------
-    // USERS (protected)
-    //---------------------------------------------------------
-    router.get('/users/list', redirectLogin, (req, res) => {
-        db.query("SELECT username, first_name, last_name, email FROM users", (err, rows) => {
-            if (err) return res.send("❌ Database issue.");
-            res.render("users_list.ejs", { users: rows, shopName: shopData.shopName });
-        });
-    });
-
-
-    //---------------------------------------------------------
-    // BOOKS
-    //---------------------------------------------------------
-    router.get('/books', (req, res) => {
-        db.query("SELECT id, name, price FROM books", (err, rows) => {
-            if (err) return res.send("❌ Books fetch error");
-            res.render("books_list.ejs", { books: rows, shopName: shopData.shopName });
-        });
-    });
-
-    router.get('/books/:id', (req, res) => {
-        db.query("SELECT * FROM books WHERE id=?", [req.params.id], (err, result) => {
-            if (!result.length) return res.send("Book not found.");
-            res.render("book_detail.ejs", { book: result[0], shopName: shopData.shopName });
-        });
-    });
-
-};
+  
+  };
+  

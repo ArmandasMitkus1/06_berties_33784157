@@ -2,15 +2,14 @@
 // IMPORTS
 //-----------------------------------------------------
 const express = require('express');
-const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
-const session = require('express-session'); 
+const session = require('express-session');
 const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 //-----------------------------------------------------
-// INITIALISE APP
+// INITIALISE SERVER
 //-----------------------------------------------------
 const app = express();
 const port = 8000;
@@ -27,11 +26,11 @@ const db = mysql.createPool({
 global.db = db;
 
 //-----------------------------------------------------
-// MAIN SHOP CONFIG
+// SHOP SETTINGS
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: ""  // Correct for DOC
+  basePath: "" // root path
 };
 
 //-----------------------------------------------------
@@ -41,7 +40,7 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 600000 }
+  cookie: { maxAge: 600000 } // 10 minutes
 }));
 
 app.use(expressSanitizer());
@@ -49,18 +48,30 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
 
 //-----------------------------------------------------
-// ROUTERS
+// VIEW ENGINE
+//-----------------------------------------------------
+app.set("views", __dirname + "/views");
+app.set("view engine", "ejs");
+
+//-----------------------------------------------------
+// ROUTES
 //-----------------------------------------------------
 const router = require("express").Router();
-require("./routes/main")(router, shopData);     // Login, Register, Books, Users
-require("./routes/cart")(router, shopData);     // Lab 8–9 Cart
-require("./routes/api")(router, shopData);      // ⭐ Lab 9 API endpoint
+
+// main app routes
+require("./routes/main")(router, shopData);
+
+// API / weather route
+require("./routes/api")(router, shopData);
+
+// cart route if you have it
+require("./routes/cart")(router, shopData);
 
 app.use("/", router);
 
 //-----------------------------------------------------
-// SERVER START
+// START SERVER
 //-----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server running at http://localhost:${port}/`);
+  console.log(`🔥 Server live on http://localhost:${port}/`);
 });

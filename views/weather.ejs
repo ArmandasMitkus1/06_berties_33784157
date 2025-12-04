@@ -1,11 +1,15 @@
-<h1>Weather 🌤</h1>
-
+<h1>🌤 Weather</h1>
 <hr>
 
 <% if (weather) { %>
-    <h2>📍 <%= weather.city %></h2>
-    <p>🌡 Temperature: <%= weather.temp %>°C</p>
-    <p>💧 Humidity: <%= weather.humidity %>%</p>
+  <h2>📍 <%= weather.city %></h2>
+  <p>🌡 Temperature: <%= weather.temp %>°C</p>
+  <p>💧 Humidity: <%= weather.humidity %>%</p>
 <% } else { %>
-    <p>No weather available</p>
+  <p>No weather data available.</p>
 <% } %>
+
+<p>
+  <a href="<%= basePath %>/">🏠 Home</a> |
+  <a href="<%= basePath %>/books">📚 Books</a>
+</p>
