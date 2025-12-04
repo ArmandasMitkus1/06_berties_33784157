@@ -27,11 +27,12 @@ const db = mysql.createPool({
 global.db = db;
 
 // -----------------------------------------------------
-// SHOP CONFIG (DO NOT CHANGE FOR SERVER DEPLOYMENT)
+// SHOP CONFIG — FIX APPLIED HERE 🔥
+// (Removes redirect loop + cleans URL)
 // -----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "/usr/428"
+  basePath: ""       // <── WAS "/usr/428", now correctly empty
 };
 
 // -----------------------------------------------------
@@ -47,8 +48,8 @@ app.use(session({
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files under basePath
-app.use(shopData.basePath, express.static(__dirname + "/public"));
+// Static files no longer need path prefix
+app.use(express.static(__dirname + "/public"));
 
 // -----------------------------------------------------
 // VIEW ENGINE
@@ -58,23 +59,14 @@ app.set("view engine", "ejs");
 app.engine("html", ejs.renderFile);
 
 // -----------------------------------------------------
-// ROUTES  (STABLE + CORRECT)
+// ROUTES
 // -----------------------------------------------------
 const router = require("./routes/main");
-
-// mount all pages under '/usr/428'
-app.use(shopData.basePath, router);
-
-// -----------------------------------------------------
-// HOMEPAGE FIX — now redirects without loop
-// -----------------------------------------------------
-app.get("/", (req, res) => {
-  res.redirect(shopData.basePath + "/");
-});
+app.use("/", router);
 
 // -----------------------------------------------------
 // START SERVER
 // -----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server running: http://localhost:${port}${shopData.basePath}`);
+  console.log(`🔥 Server running at http://localhost:${port}/`);
 });
