@@ -1,33 +1,50 @@
-<h1>Your Cart 🛒 — <%= shopName %></h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Cart – <%= shopName %></title>
+    <link rel="stylesheet" href="<%= basePath %>/main.css">
+</head>
+<body>
+    <h1>🛒 Your Cart – <%= shopName %></h1>
 
-<p>
-  <a href="<%= basePath %>/">🏠 Home</a> |
-  <a href="<%= basePath %>/books">📚 Books</a> |
-  <a href="<%= basePath %>/users/list">Users</a> |
-  <a href="<%= basePath %>/logout">Logout</a>
-</p>
-<hr>
+    <p>
+        <a href="<%= basePath %>/">🏠 Home</a> |
+        <a href="<%= basePath %>/books">📚 Books</a> |
+        <a href="<%= basePath %>/users/list">👤 Users</a> |
+        <a href="<%= basePath %>/logout">🚪 Logout</a>
+    </p>
 
-<% if (!cart || cart.length === 0) { %>
-  <h2>Cart is empty</h2>
-  <p><a href="<%= basePath %>/books">Browse books</a></p>
+    <hr>
 
-<% } else { %>
+    <% if (!cart || cart.length === 0) { %>
+        <h2>Your cart is empty.</h2>
+        <p><a href="<%= basePath %>/books">Browse books</a> to add some! 📘</p>
+    <% } else { %>
+        <table border="1" cellpadding="6" cellspacing="0">
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Price (£)</th>
+                <th>Remove</th>
+            </tr>
 
-<table border="1" cellpadding="6">
-<tr><th>ID</th><th>Name</th><th>Price</th><th>Remove</th></tr>
+            <% let total = 0; %>
+            <% cart.forEach(book => { %>
+                <% total += Number(book.price); %>
+                <tr>
+                    <td><%= book.id %></td>
+                    <td><%= book.name %></td>
+                    <td>£<%= Number(book.price).toFixed(2) %></td>
+                    <td><a href="<%= basePath %>/cart/remove/<%= book.id %>">❌</a></td>
+                </tr>
+            <% }) %>
+        </table>
 
-<% let total = 0; cart.forEach(item => { total += Number(item.price); %>
-<tr>
-  <td><%= item.id %></td>
-  <td><%= item.name %></td>
-  <td>£<%= Number(item.price).toFixed(2) %></td>
-  <td><a href="<%= basePath %>/cart/remove/<%= item.id %>">❌</a></td>
-</tr>
-<% }) %>
-</table>
+        <h2 style="margin-top:20px;">
+            🧾 Cart Total: £<%= total.toFixed(2) %>
+        </h2>
 
-<h2>Total: £<%= total.toFixed(2) %></h2>
-<button>Checkout 💳</button>
-
-<% } %>
+        <button style="padding:10px 20px;">Proceed to Checkout 💳</button>
+    <% } %>
+</body>
+</html>

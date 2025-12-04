@@ -1,19 +1,33 @@
-<h1>📚 Books at <%= shopName %></h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Books – <%= shopName %></title>
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
+</head>
+<body>
+  <h1>📚 Books at <%= shopName %></h1>
 
-<p>
-  <a href="<%= basePath %>/">🏠 Home</a> | 
-  <a href="<%= basePath %>/users/list">👤 Users</a> | 
-  <a href="<%= basePath %>/cart">🛒 Cart</a> | 
-  <a href="<%= basePath %>/logout">🚪 Logout</a>
-</p>
+  <p>
+    <a href="<%= basePath %>/">🏠 Home</a> |
+    <a href="<%= basePath %>/users/list">👤 Users</a> |
+    <a href="<%= basePath %>/cart">🛒 Cart</a> |
+    <a href="<%= basePath %>/logout">🚪 Logout</a>
+  </p>
 
-<hr>
+  <hr>
 
-<ul>
-<% books.forEach(book => { %>
-  <li>
-    <a href="<%= basePath %>/books/<%= book.id %>"><%= book.name %></a> — £<%= Number(book.price).toFixed(2) %>
-    <a href="<%= basePath %>/cart/add/<%= book.id %>">🛒 Add to Cart</a>
-  </li>
-<% }) %>
-</ul>
+  <% if (books && books.length > 0) { %>
+    <ul>
+      <% books.forEach(book => { %>
+        <li>
+          <a href="<%= basePath %>/books/<%= book.id %>"><%= book.name %></a>
+          — £<%= Number(book.price).toFixed(2) %>
+          <a href="<%= basePath %>/cart/add/<%= book.id %>" style="margin-left:10px;">🛒 Add to Cart</a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p>No books available.</p>
+  <% } %>
+</body>
+</html>

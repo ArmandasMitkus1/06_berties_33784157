@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title><%= shopName %></title>
-    <link rel="stylesheet" href="<%= basePath %>/main.css">
+  <title><%= shopName %> – Home</title>
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
 </head>
 <body>
+  <h1>Welcome to <%= shopName %> 📚</h1>
 
-<h1>Welcome to Bertie's Books</h1>
-
-<p><a href="<%= basePath %>/about">About Bertie's Books</a></p>
-<p><a href="<%= basePath %>/search">Search for books</a></p>
-<p><a href="<%= basePath %>/register">Register with us</a></p>
-
-<p>
-    <a href="<%= basePath %>/users/list">User List</a> |
-    <a href="<%= basePath %>/logout">Logout</a>
-</p>
-
+  <p>
+    <a href="<%= basePath %>/books">Books</a> |
+    <a href="<%= basePath %>/users/list">Users</a> |
+    <a href="<%= basePath %>/cart">Cart</a> |
+    <a href="<%= basePath %>/weather">Weather</a> |
+    <a href="<%= basePath %>/login">Login</a> |
+    <a href="<%= basePath %>/register">Register</a>
+  </p>
 </body>
 </html>

@@ -1,17 +1,38 @@
-<h1>Weather at <%= shopName %></h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather – <%= shopName %></title>
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
+</head>
+<body>
+  <h1>🌦 Weather at <%= shopName %></h1>
 
-<form action="<%= basePath %>/weather" method="POST">
-  <input type="text" name="city" placeholder="Enter city" required>
-  <button type="submit">Search</button>
-</form>
+  <p>
+    <a href="<%= basePath %>/">🏠 Home</a> |
+    <a href="<%= basePath %>/books">📚 Books</a> |
+    <a href="<%= basePath %>/users/list">👤 Users</a> |
+    <a href="<%= basePath %>/cart">🛒 Cart</a> |
+    <a href="<%= basePath %>/logout">🚪 Logout</a>
+  </p>
 
-<% if (error) { %>
-  <p style="color:red;"><%= error %></p>
-<% } %>
+  <hr>
 
-<% if (weather) { %>
-  <h2>📍 <%= weather.city %></h2>
-  <p>🌡️ Temperature: <%= weather.temp %>°C</p>
-  <p>💧 Humidity: <%= weather.humidity %>%</p>
-  <p>📝 Description: <%= weather.description %></p>
-<% } %>
+  <form method="POST" action="<%= basePath %>/weather">
+    <label for="city">Enter city:</label>
+    <input type="text" name="city" id="city" required>
+    <button type="submit">Check Weather</button>
+  </form>
+
+  <% if (weather) { %>
+    <h2>Weather in <%= weather.city %>:</h2>
+    <ul>
+      <li>Temperature: <%= weather.temp %> °C</li>
+      <li>Humidity: <%= weather.humidity %>%</li>
+      <li>Description: <%= weather.description %></li>
+    </ul>
+  <% } else if (typeof error !== 'undefined') { %>
+    <p style="color:red;"><%= error %></p>
+  <% } %>
+
+</body>
+</html>
