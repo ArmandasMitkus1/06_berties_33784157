@@ -1,18 +1,15 @@
-<h1>Current Weather</h1>
+<h1>Weather at <%= shopName %></h1>
 
-<form action="/weather" method="POST">
-    <label for="city">Enter city:</label>
-    <input type="text" id="city" name="city" required>
-    <button type="submit">Get Weather</button>
+<form action="<%= basePath %>/weather" method="POST">
+  <input type="text" name="city" placeholder="Enter city" required>
+  <button type="submit">Search</button>
 </form>
 
-<hr>
-
-<% if (weather) { %>
-    <h2>📍 <%= weather.city %></h2>
-    <p>🌡️ Temperature: <%= weather.temp %>°C</p>
-    <p>💧 Humidity: <%= weather.humidity %>%</p>
-    <p>📝 Description: <%= weather.description %></p>
-<% } else { %>
-    <p>Weather data is currently unavailable. Please try again later.</p>
+<% if (result) { %>
+  <h2>Weather in <%= result.city %></h2>
+  <p>Temperature: <%= result.temp %>°C</p>
+  <p>Humidity: <%= result.humidity %>%</p>
+  <p>Condition: <%= result.description %></p>
+<% } else if (error) { %>
+  <p style="color:red;"><%= error %></p>
 <% } %>
