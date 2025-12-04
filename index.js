@@ -27,11 +27,11 @@ const db = mysql.createPool({
 global.db = db;
 
 // -----------------------------------------------------
-// SHOP CONFIG  << THIS IS WHAT DEPLOY SERVER USES
+// SHOP CONFIG (DO NOT CHANGE FOR SERVER WORKING)
 // -----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "/usr/428"        // <<< DO NOT CHANGE
+  basePath: "/usr/428"
 };
 
 // -----------------------------------------------------
@@ -47,7 +47,7 @@ app.use(session({
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// static files MUST sit under the same basePath
+// serve static files
 app.use(shopData.basePath, express.static(__dirname + "/public"));
 
 // -----------------------------------------------------
@@ -58,18 +58,14 @@ app.set("view engine", "ejs");
 app.engine("html", ejs.renderFile);
 
 // -----------------------------------------------------
-// ROUTES  << THIS WAS THE BROKEN PART — NOW FIXED
+// ROUTES  **FIXED — THIS IS THE CORRECT VERSION**
 // -----------------------------------------------------
-const router = express.Router();
-const mainRoutes = require("./routes/main");
+const router = require("./routes/main");   // import router directly
 
-// load routes into router
-mainRoutes(router, shopData);
-
-// MOUNT ROUTES UNDER BASE PATH
+// mount router under basePath
 app.use(shopData.basePath, router);
 
-// redirect raw domain → correct basePath
+// redirect base domain so site loads properly
 app.get("/", (req, res) => {
   res.redirect(shopData.basePath + "/");
 });
@@ -78,6 +74,5 @@ app.get("/", (req, res) => {
 // START SERVER
 // -----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🔥 Server running on port ${port}`);
-  console.log(`Open locally: http://localhost:${port}${shopData.basePath}`);
+  console.log(`🔥 Server running on http://localhost:${port}${shopData.basePath}`);
 });
