@@ -1,30 +1,32 @@
+const express = require("express");
 const axios = require("axios");
+require('dotenv').config();
 
-module.exports = function (router, shopData) {
+module.exports = (router) => {
 
-  router.get("/weather", async (req, res) => {
-    const city = req.query.city;
-    if (!city) return res.send("Please provide a city in the query, e.g., ?city=London");
+    // Weather route
+    router.get("/weather", async (req, res) => {
+        try {
+            const city = "London"; // fixed city
+            const apiKey = process.env.OWM_API_KEY;
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
 
-    const apiKey = process.env.OWM_API_KEY;
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            const response = await axios.get(url);
+            const data = response.data;
 
-    try {
-      const response = await axios.get(url);
-      const data = response.data;
+            const weather = {
+                city: data.name,
+                temp: data.main.temp,
+                humidity: data.main.humidity,
+                description: data.weather[0].description
+            };
 
-      const weather = {
-        city: data.name,
-        temp: data.main.temp,
-        desc: data.weather[0].description,
-        icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`
-      };
+            res.render("weather", { weather });
 
-      res.render("weather", { shopName: shopData.shopName, weather });
-    } catch (err) {
-      console.error(err);
-      res.send("Error fetching weather data. Make sure the city exists and API key is valid.");
-    }
-  });
+        } catch (error) {
+            console.error("Error fetching weather:", error.message);
+            res.render("weather", { weather: null });
+        }
+    });
 
 };
