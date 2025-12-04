@@ -14,11 +14,16 @@ module.exports = (router, shopData) => {
       const response = await axios.get(url);
       const data = response.data;
 
-      const weather = { city: data.name, temp: data.main.temp, humidity: data.main.humidity, description: data.weather[0].description };
+      const weather = {
+        city: data.name,
+        temp: data.main.temp,
+        humidity: data.main.humidity,
+        description: data.weather[0].description
+      };
 
       res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather });
 
-    } catch (err) {
+    } catch (error) {
       res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null, error: "City not found" });
     }
   });

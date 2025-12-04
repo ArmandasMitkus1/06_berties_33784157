@@ -31,7 +31,7 @@ global.db = db;
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "" // root path
+  basePath: ""
 };
 
 //-----------------------------------------------------
@@ -41,9 +41,8 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 10 } // 10 minutes
+  cookie: { maxAge: 600000 }
 }));
-
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
@@ -53,14 +52,13 @@ app.use(express.static(__dirname + "/public"));
 //-----------------------------------------------------
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
-app.engine("html", ejs.renderFile);
 
 //-----------------------------------------------------
 // ROUTES
 //-----------------------------------------------------
 const router = require("express").Router();
 
-// Main app routes
+// Core routes
 require("./routes/main")(router, shopData);
 
 // Cart routes
@@ -69,9 +67,8 @@ require("./routes/cart")(router, shopData);
 // Weather API routes
 require("./routes/weather")(router, shopData);
 
-// API JSON endpoints
+// API routes (books)
 require("./routes/api_books")(router);
-require("./routes/api_users")(router);
 
 app.use("/", router);
 
