@@ -27,12 +27,11 @@ const db = mysql.createPool({
 global.db = db;
 
 // -----------------------------------------------------
-// SHOP CONFIG — FIX APPLIED HERE 🔥
-// (Removes redirect loop + cleans URL)
+// SHOP CONFIG — FINAL VERSION
 // -----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: ""       // <── WAS "/usr/428", now correctly empty
+  basePath: ""   // Running at root: https://doc.gold.ac.uk/usr/428/
 };
 
 // -----------------------------------------------------
@@ -48,7 +47,7 @@ app.use(session({
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Static files no longer need path prefix
+// Serve static files normally (works in browser now)
 app.use(express.static(__dirname + "/public"));
 
 // -----------------------------------------------------
@@ -59,10 +58,15 @@ app.set("view engine", "ejs");
 app.engine("html", ejs.renderFile);
 
 // -----------------------------------------------------
-// ROUTES
+// ROUTES — FIXED (NO MORE router.post ERROR 🔥)
 // -----------------------------------------------------
-const router = require("./routes/main");
-app.use("/", router);
+const expressRouter = require("express").Router;  // create router correctly
+const mainRoutes = require("./routes/main");
+
+const router = expressRouter();
+mainRoutes(router, shopData);
+
+app.use("/", router);   // Mount properly at root
 
 // -----------------------------------------------------
 // START SERVER
