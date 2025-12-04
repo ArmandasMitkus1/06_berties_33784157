@@ -1,14 +1,29 @@
-<h1>🌤 Weather Search — <%= shopName %></h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather – <%= shopName %></title>
+  <link rel="stylesheet" href="/main.css">
+</head>
+<body>
 
-<form action="<%= basePath %>/weather" method="POST">
-    <input type="text" name="city" placeholder="Enter city" required>
-    <button type="submit">Search 🔍</button>
+<h1>🌤 Weather Lookup</h1>
+
+<form action="/weather" method="GET">
+  <label>Enter city name:</label>
+  <input type="text" name="city" required>
+  <button type="submit">Check Weather</button>
 </form>
 
-<% if (typeof result !== "undefined") { %>
-    <h2>Results for <%= result.name %>:</h2>
-    <p>Temperature: <%= result.main.temp %>°C</p>
-    <p>Weather: <%= result.weather[0].description %></p>
+<hr>
+
+<% if (weather) { %>
+  <h2>📍 <%= weather.city %></h2>
+  <p>🌡 Temperature: <%= weather.temp %>°C</p>
+  <p>💧 Humidity: <%= weather.humidity %>%</p>
+  <p>🌬 Wind: <%= weather.wind %> km/h</p>
 <% } %>
 
-<p><a href="<%= basePath %>/">⬅ Back</a></p>
+<p><a href="/">🏠 Home</a></p>
+
+</body>
+</html>

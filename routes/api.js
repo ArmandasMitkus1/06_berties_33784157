@@ -1,26 +1,44 @@
+const axios = require("axios");
+
 module.exports = function(router, shopData) {
 
-    // Return all books in JSON
-    router.get("/api/books", (req, res) => {
-        db.query("SELECT * FROM books", (err, rows) => {
-            if (err) return res.json({ error: err });
-            res.json(rows);
-        });
-    });
+    // Weather Route
+    router.get("/weather", async (req, res) => {
 
-    // Search books ?q=
-    router.get("/api/books/search", (req, res) => {
-        const q = req.query.q || "";
-        db.query("SELECT * FROM books WHERE name LIKE ?", [`%${q}%`], (err, rows) => {
-            res.json(rows);
-        });
-    });
+        if (!req.query.city)
+            return res.render("weather.ejs", { shopName: shopData.shopName });
 
-    // Single book by ID
-    router.get("/api/books/:id", (req, res) => {
-        db.query("SELECT * FROM books WHERE id=?", [req.params.id], (err, rows) => {
-            if (!rows.length) return res.json({ error:"Not found" });
-            res.json(rows[0]);
-        });
+        const city = req.query.city;
+
+        try {
+            // step 1: get lat/lon
+            const geo = await axios.get(
+              `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`
+            );
+
+            const location = geo.data.results?.[0];
+            if (!location) return res.send("City not found");
+
+            // step 2: get weather data
+            const weatherAPI = await axios.get(
+              `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,wind_speed_10m,relative_humidity_2m`
+            );
+
+            const w = weatherAPI.data.current;
+
+            res.render("weather.ejs", {
+                shopName: shopData.shopName,
+                weather: {
+                    city,
+                    temp: w.temperature_2m,
+                    wind: w.wind_speed_10m,
+                    humidity: w.relative_humidity_2m
+                }
+            });
+
+        } catch (err) {
+            res.send("Weather API Error ❌");
+        }
+
     });
 };

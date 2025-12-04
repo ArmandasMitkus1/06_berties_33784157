@@ -10,7 +10,7 @@ const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 //-----------------------------------------------------
-// INITIALISE SERVER
+// INITIALISE APP
 //-----------------------------------------------------
 const app = express();
 const port = 8000;
@@ -27,11 +27,11 @@ const db = mysql.createPool({
 global.db = db;
 
 //-----------------------------------------------------
-// SHOP SETTINGS (BACK TO NORMAL 🔥)
+// MAIN SHOP CONFIG
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: "" // no /usr/428 - we confirmed this works
+  basePath: ""  // Correct for DOC
 };
 
 //-----------------------------------------------------
@@ -49,16 +49,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
 
 //-----------------------------------------------------
-// ROUTES — stable, working routes only
+// ROUTERS
 //-----------------------------------------------------
 const router = require("express").Router();
-require("./routes/main")(router, shopData);
+require("./routes/main")(router, shopData);     // Login, Register, Books, Users
+require("./routes/cart")(router, shopData);     // Lab 8–9 Cart
+require("./routes/api")(router, shopData);      // ⭐ Lab 9 API endpoint
 
 app.use("/", router);
 
 //-----------------------------------------------------
-// START
+// SERVER START
 //-----------------------------------------------------
 app.listen(port, () => {
-  console.log("🔥 Server live on port " + port);
+  console.log(`🔥 Server running at http://localhost:${port}/`);
 });
