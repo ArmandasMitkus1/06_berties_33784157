@@ -2,14 +2,9 @@ const axios = require("axios");
 require('dotenv').config();
 
 module.exports = (router, shopData) => {
-
-  router.get("/weather", (req, res) => {
-    res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null });
-  });
-
-  router.post("/weather", async (req, res) => {
+  router.get("/weather", async (req, res) => {
     try {
-      const city = req.body.city || "London";
+      const city = req.query.city || "London";
       const apiKey = process.env.OWM_API_KEY;
       const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
 
@@ -23,11 +18,11 @@ module.exports = (router, shopData) => {
         description: data.weather[0].description
       };
 
-      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather });
+      res.render("weather", { weather, shopName: shopData.shopName, basePath: shopData.basePath });
 
     } catch (err) {
-      res.render("weather", { shopName: shopData.shopName, basePath: shopData.basePath, weather: null });
+      console.error(err);
+      res.render("weather", { weather: null, shopName: shopData.shopName, basePath: shopData.basePath });
     }
   });
-
 };
