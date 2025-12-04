@@ -1,24 +1,50 @@
-# Bertie’s Books – Lab 7
+Lab 9 – APIs
 
-Simple Node.js + MySQL web app for the Goldsmiths web dev labs. Built on top of the Lab 6 bookshop and extended with user registration and database-backed pages.
+This project completes Lab 9a (Calling APIs) and Lab 9b (Providing APIs) for Bertie’s Books.
 
-## Features
+What this app does
+🌦 Weather Feature (Lab 9a)
 
-- Home, About, Search pages (`/`, `/about`, `/search`)
-- Book list from MySQL (`/books`)
-- Individual book detail (`/books/:id`)
-- Registration form (`/register` → `/registered`)
-- Users stored in `berties_books.users` (with hashed default password)
+Uses OpenWeatherMap API to get live weather data
 
-## Tech Stack
+Route added: /weather
 
-- Node.js, Express, EJS
-- MySQL (database: `berties_books`)
-- Deployed on Goldsmiths VM (`doc428`)
+User can type a city and get temperature, humidity etc.
 
-## Run Locally
+Includes basic error handling so invalid city names don’t crash the app
 
-```bash
+
+Lab 9a - Calling APIs
+
+📚 Books API (Lab 9b)
+
+Added a new API route for developers to access book data in JSON
+
+Route: /api/books
+
+Queries the database and returns results as JSON
+
+
+Lab 9b - Providing APIs
+
+Extra features added
+
+Better formatting for weather results
+
+Weather page link added to homepage
+
+Optional API search/sort/price parameters (if completed)
+
+How to run
 npm install
-npm start
-# app on http://localhost:8000
+node app.js
+# or on VM
+forever start app.js
+
+Required URLs for submission
+Feature	URL
+Home	/
+Weather Page	/weather
+Books API	/api/books
+
+If you want, I can also generate a final links.txt + improved styling for your submission.
