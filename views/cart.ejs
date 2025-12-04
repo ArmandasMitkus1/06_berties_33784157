@@ -1,51 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Your Cart – <%= shopName %></title>
-    <link rel="stylesheet" href="<%= basePath %>/main.css">
+  <title>Cart – <%= shopName %></title>
+  <link rel="stylesheet" href="<%= basePath %>/main.css">
 </head>
 
 <body>
+
 <h1>🛒 Your Cart – <%= shopName %></h1>
 
 <p>
-    <a href="<%= basePath %>/">🏠 Home</a> |
-    <a href="<%= basePath %>/books">📚 Books</a> |
-    <a href="<%= basePath %>/users/list">👤 Users</a> |
-    <a href="<%= basePath %>/logout">🚪 Logout</a>
+  <a href="<%= basePath %>/">🏠 Home</a> |
+  <a href="<%= basePath %>/books">📚 Books</a> |
+  <a href="<%= basePath %>/users/list">👤 Users</a> |
+  <a href="<%= basePath %>/logout">🚪 Logout</a>
 </p>
 
 <hr>
 
 <% if (!cart || cart.length === 0) { %>
 
-    <h2>Your cart is empty.</h2>
-    <p><a href="<%= basePath %>/books">Browse books</a> to add some! 📘</p>
+<h2>Your cart is empty.</h2>
+<p><a href="<%= basePath %>/books">Browse books</a> to add some 📘</p>
 
 <% } else { %>
 
-    <table border="1" cellpadding="6">
-        <tr>
-            <th>Book</th>
-            <th>Price (£)</th>
-            <th>Remove</th>
-        </tr>
+<table border="1" cellpadding="6">
+  <tr>
+    <th>ID</th><th>Title</th><th>Price</th><th>Remove</th>
+  </tr>
 
-        <% let total = 0; %>
-        <% cart.forEach(book => { 
-            total += Number(book.price);
-        %>
-            <tr>
-                <td><%= book.name %></td>
-                <td>£<%= Number(book.price).toFixed(2) %></td>
-                <td><a href="<%= basePath %>/cart/remove/<%= book.id %>">❌</a></td>
-            </tr>
-        <% }); %>
-    </table>
+  <% let total = 0; %>
 
-    <h2 style="margin-top:18px;">🧾 Total: £<%= total.toFixed(2) %></h2>
+  <% cart.forEach(book => { %>
+    <% total += Number(book.price); %>
+    <tr>
+      <td><%= book.id %></td>
+      <td><%= book.name %></td>
+      <td>£<%= Number(book.price).toFixed(2) %></td>
+      <td><a href="<%= basePath %>/cart/remove/<%= book.id %>">❌</a></td>
+    </tr>
+  <% }) %>
+</table>
 
-    <button style="padding:10px;margin-top:10px;">Checkout 💳</button>
+<h2>🧾 Total: £<%= total.toFixed(2) %></h2>
+<button>Checkout 💳</button>
 
 <% } %>
 

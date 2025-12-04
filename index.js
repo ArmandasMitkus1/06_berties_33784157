@@ -10,7 +10,7 @@ const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
 //-----------------------------------------------------
-// INITIALISE APP
+// INITIALISE
 //-----------------------------------------------------
 const app = express();
 const port = 8000;
@@ -27,11 +27,11 @@ const db = mysql.createPool({
 global.db = db;
 
 //-----------------------------------------------------
-// GLOBAL SHOP SETTINGS
+// SHOP CONFIG
 //-----------------------------------------------------
 const shopData = {
   shopName: "Bertie's Books",
-  basePath: ""   // 👈 root path (no /usr/428 needed)
+  basePath: ""       // ⬅ correct for doc.gold.ac.uk/usr/428/
 };
 
 //-----------------------------------------------------
@@ -41,13 +41,21 @@ app.use(session({
   secret: "somerandomstuff",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 10 } // 10min session
+  cookie: { maxAge: 1000 * 60 * 10 } // 10 min session
 }));
 
 app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname + "/public"));  // CSS + images
 
-app.use(express.static(__dirname + "/public")); // CSS, images, JS
+//-----------------------------------------------------
+// 🔥 MAKE basePath + shopName AVAILABLE IN ALL EJS FILES
+//-----------------------------------------------------
+app.use((req, res, next) => {
+  res.locals.basePath = shopData.basePath;
+  res.locals.shopName = shopData.shopName;
+  next();
+});
 
 //-----------------------------------------------------
 // VIEW ENGINE
@@ -61,13 +69,10 @@ app.set("view engine", "ejs");
 const Router = require("express").Router;
 const router = Router();
 
-// main routing file
-require("./routes/main")(router, shopData);
+require("./routes/main")(router, shopData); // login/register/books/users
+require("./routes/cart")(router, shopData); // 🛒 LAB 9 Shopping cart
 
-// 🛒 Shopping Cart (lab 9)
-require("./routes/cart")(router, shopData);
-
-app.use("/", router); // mount everything at root
+app.use("/", router);
 
 //-----------------------------------------------------
 // START SERVER
