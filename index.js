@@ -1,6 +1,6 @@
-// ---------------------------------------------
-// IMPORT MODULES
-// ---------------------------------------------
+// -----------------------------------------------------
+// IMPORTS
+// -----------------------------------------------------
 const express = require('express');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
@@ -9,95 +9,75 @@ const session = require('express-session');
 const expressSanitizer = require('express-sanitizer');
 require('dotenv').config();
 
-// ---------------------------------------------
-// CREATE EXPRESS APP
-// ---------------------------------------------
+// -----------------------------------------------------
+// INITIALISE
+// -----------------------------------------------------
 const app = express();
-const port = 8000; // CRITICAL: Use the correct port
+const port = 8000;
 
-// ---------------------------------------------
-// LOG STARTUP
-// ---------------------------------------------
-console.log('✅ Starting Bertie\'s Books server...');
-console.log('🔍 Checking database connection...');
-
-// ---------------------------------------------
-// SETUP MYSQL CONNECTION POOL
-// ---------------------------------------------
+// -----------------------------------------------------
+// DATABASE
+// -----------------------------------------------------
 const db = mysql.createPool({
-  host: process.env.BB_HOST || 'localhost',
+  host: process.env.BB_HOST || "localhost",
   user: process.env.BB_USER,
   password: process.env.BB_PASSWORD,
   database: process.env.BB_DATABASE
 });
-
-// Make the db global for route access
 global.db = db;
 
-// ---------------------------------------------
-// TEMPLATE DATA (Defining basePath for VM navigation)
-// ---------------------------------------------
-const shopData = { 
-    shopName: "Bertie's Books",
-    // CRITICAL: Base path must be defined here for routing and links
-    basePath: '/usr/428' 
+// -----------------------------------------------------
+// SHOP CONFIG  << THIS IS WHAT DEPLOY SERVER USES
+// -----------------------------------------------------
+const shopData = {
+  shopName: "Bertie's Books",
+  basePath: "/usr/428"        // <<< DO NOT CHANGE
 };
 
-// ---------------------------------------------
+// -----------------------------------------------------
 // MIDDLEWARE
-// ---------------------------------------------
-// Session Middleware (Lab 8a)
+// -----------------------------------------------------
 app.use(session({
-    secret: 'somerandomstuff', 
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        expires: 600000 
-    }
+  secret: "somerandomstuff",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { expires: 600000 }
 }));
 
-// Sanitisation Middleware (Lab 8b, Task 6)
-app.use(expressSanitizer()); 
-
+app.use(expressSanitizer());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// FIX 1: Mount static files at the BASE PATH
-app.use(shopData.basePath, express.static(__dirname + '/public')); 
+// static files MUST sit under the same basePath
+app.use(shopData.basePath, express.static(__dirname + "/public"));
 
-// ---------------------------------------------
+// -----------------------------------------------------
 // VIEW ENGINE
-// ---------------------------------------------
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
-app.engine('html', ejs.renderFile);
+// -----------------------------------------------------
+app.set("views", __dirname + "/views");
+app.set("view engine", "ejs");
+app.engine("html", ejs.renderFile);
 
-// ---------------------------------------------
-// ROUTES (Router Mounting Fix)
-// ---------------------------------------------
+// -----------------------------------------------------
+// ROUTES  << THIS WAS THE BROKEN PART — NOW FIXED
+// -----------------------------------------------------
+const router = express.Router();
+const mainRoutes = require("./routes/main");
 
-// 1. Require the routes function
-const mainRoutes = require('./routes/main'); 
-
-// 2. Create an Express Router instance
-const router = express.Router(); 
-
-// 3. Pass the Router instance and shopData to the main.js function
+// load routes into router
 mainRoutes(router, shopData);
 
-// 4. Mount the Router instance at the required BASE PATH
-// This handles all specific routes like /usr/428/login
-app.use(shopData.basePath, router); 
+// MOUNT ROUTES UNDER BASE PATH
+app.use(shopData.basePath, router);
 
-// 5. CRITICAL FIX: Handle the generic server root redirect
-// This forces any user hitting the bare server root to redirect to the correct base path.
-// This is done LAST to avoid conflicts with defined routes.
-app.use('/', (req, res) => {
-    res.redirect(shopData.basePath + '/');
+// redirect raw domain → correct basePath
+app.get("/", (req, res) => {
+  res.redirect(shopData.basePath + "/");
 });
 
-// ---------------------------------------------
+// -----------------------------------------------------
 // START SERVER
-// ---------------------------------------------
+// -----------------------------------------------------
 app.listen(port, () => {
-  console.log(`🚀 Example app listening on http://localhost:${port}/`);
+  console.log(`🔥 Server running on port ${port}`);
+  console.log(`Open locally: http://localhost:${port}${shopData.basePath}`);
 });
