@@ -2,43 +2,25 @@ const axios = require("axios");
 
 module.exports = function(router, shopData) {
 
-    // Weather Route
     router.get("/weather", async (req, res) => {
-
-        if (!req.query.city)
-            return res.render("weather.ejs", { shopName: shopData.shopName });
-
-        const city = req.query.city;
+        let city = req.query.city || "London"; // default city
 
         try {
-            // step 1: get lat/lon
-            const geo = await axios.get(
-              `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`
-            );
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=0.1276&current_weather=true`;
+            const response = await axios.get(url);
 
-            const location = geo.data.results?.[0];
-            if (!location) return res.send("City not found");
+            const weather = {
+                city: city,
+                temp: response.data.current_weather.temperature,
+                humidity: response.data.current_weather.relativehumidity_2m || "N/A"
+            };
 
-            // step 2: get weather data
-            const weatherAPI = await axios.get(
-              `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,wind_speed_10m,relative_humidity_2m`
-            );
-
-            const w = weatherAPI.data.current;
-
-            res.render("weather.ejs", {
-                shopName: shopData.shopName,
-                weather: {
-                    city,
-                    temp: w.temperature_2m,
-                    wind: w.wind_speed_10m,
-                    humidity: w.relative_humidity_2m
-                }
-            });
+            res.render("weather", { shopName: shopData.shopName, weather });
 
         } catch (err) {
-            res.send("Weather API Error ❌");
+            console.log(err);
+            res.render("weather", { shopName: shopData.shopName, weather: null });
         }
-
     });
+
 };

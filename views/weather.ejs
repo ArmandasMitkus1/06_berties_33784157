@@ -1,29 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Weather – <%= shopName %></title>
-  <link rel="stylesheet" href="/main.css">
-</head>
-<body>
-
-<h1>🌤 Weather Lookup</h1>
-
-<form action="/weather" method="GET">
-  <label>Enter city name:</label>
-  <input type="text" name="city" required>
-  <button type="submit">Check Weather</button>
-</form>
+<h1>Weather 🌤</h1>
 
 <hr>
 
 <% if (weather) { %>
-  <h2>📍 <%= weather.city %></h2>
-  <p>🌡 Temperature: <%= weather.temp %>°C</p>
-  <p>💧 Humidity: <%= weather.humidity %>%</p>
-  <p>🌬 Wind: <%= weather.wind %> km/h</p>
+    <h2>📍 <%= weather.city %></h2>
+    <p>🌡 Temperature: <%= weather.temp %>°C</p>
+    <p>💧 Humidity: <%= weather.humidity %>%</p>
+<% } else { %>
+    <p>No weather available</p>
 <% } %>
-
-<p><a href="/">🏠 Home</a></p>
-
-</body>
-</html>
